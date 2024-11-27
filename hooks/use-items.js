@@ -18,7 +18,6 @@ export const useItems = () => {
       if (!response.ok)
         throw new Error(data.message || "Failed to fetch items");
 
-      // Sort items by type and name
       const sortedData = [...data].sort((a, b) => {
         if (a.type === b.type) {
           return a.internal_item_name.localeCompare(
@@ -115,7 +114,6 @@ export const useItems = () => {
         const itemToDelete = items.find((item) => item.id === id);
 
         if (itemToDelete?.type === "sell") {
-          // For sell type items, check BOM relationships
           const bomResponse = await fetch(
             `https://api-assignment.inveesync.in/bom?item_id=${id}`
           );
@@ -128,7 +126,6 @@ export const useItems = () => {
           }
         }
 
-        // If we reach here, it's safe to delete the item
         const response = await fetch(
           `https://api-assignment.inveesync.in/items/${id}`,
           {

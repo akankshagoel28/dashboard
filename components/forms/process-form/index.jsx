@@ -47,16 +47,15 @@ function ProcessForm({ onSubmit, initialData }) {
   }, [fetchItems]);
 
   useEffect(() => {
-    console.log("Raw Items:", items); // Debug log for raw items
-
+    console.log("Raw Items:", items);
     if (items && items.length > 0) {
       const tenantIds = items.map((item) => item.tenant_id);
-      console.log("Tenant IDs extracted:", tenantIds); // Debug log for extracted IDs
+      console.log("Tenant IDs extracted:", tenantIds);
 
       const uniqueTenants = [
         ...new Set(items.map((item) => item.tenant_id)),
       ];
-      console.log("Unique Tenant IDs:", uniqueTenants); // Debug log for unique IDs
+      console.log("Unique Tenant IDs:", uniqueTenants);
 
       const formattedTenants = uniqueTenants
         .filter(Boolean)

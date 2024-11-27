@@ -1,4 +1,3 @@
-// components/dashboard/masterlist-dashboard.jsx
 "use client";
 import React, { useState } from "react";
 import ProgressTracker from "./progress-tracker";

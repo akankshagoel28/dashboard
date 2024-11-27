@@ -102,7 +102,6 @@ function BomForm({ onSubmit, editData, items, selectedItemId }) {
         quantity: form.getValues("quantity") || 1,
       });
 
-      // Close dialogs and reset forms
       setNewComponentDialog(false);
       setOpen(false);
       newComponentForm.reset();

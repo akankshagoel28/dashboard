@@ -24,7 +24,6 @@ import {
 
 function ItemsTable({ items, onEdit, onDelete }) {
   const getStatus = (item) => {
-    // Check all required fields for completion
     const isComplete = Boolean(
       item.internal_item_name &&
         item.tenant_id &&

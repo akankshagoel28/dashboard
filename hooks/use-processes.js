@@ -50,7 +50,7 @@ export const useProcesses = () => {
         if (!response.ok)
           throw new Error(data.message || "Failed to add process");
         setProcesses((prev) => [...prev, data]);
-        await fetchProcesses(); // Refresh the list after adding
+        await fetchProcesses();
         return { success: true, data };
       } catch (err) {
         setError(err.message);
@@ -108,7 +108,7 @@ export const useProcesses = () => {
         const data = await response.json();
         if (!response.ok)
           throw new Error(data.message || "Failed to delete process");
-        await fetchProcesses(); // Refresh the list after deleting
+        await fetchProcesses();
         return { success: true, data };
       } catch (err) {
         setError(err.message);

@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { PencilIcon, Trash2Icon } from "lucide-react";
 
 function ProcessTable({ processes = [], onEdit, onDelete }) {
-  // Add default empty array
   return (
     <Table>
       <TableHeader>

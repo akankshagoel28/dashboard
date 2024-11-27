@@ -44,7 +44,6 @@ function BomMaster() {
 
   const handleBulkUpload = async (data) => {
     try {
-      // Process each row
       const results = await Promise.all(
         data.map((row) =>
           addBom({

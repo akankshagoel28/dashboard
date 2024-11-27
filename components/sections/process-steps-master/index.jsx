@@ -174,7 +174,7 @@ function ProcessStepsMaster() {
             onSubmit={handleSubmit}
             initialData={editData}
             selectedItemId={selectedItemId}
-            processes={processes || []} // Ensure processes is never undefined
+            processes={processes || []}
           />
         </DialogContent>
       </Dialog>
@@ -200,7 +200,7 @@ function ProcessStepsMaster() {
             </div>
             <ProcessStepTable
               processSteps={processSteps}
-              processes={processes || []} // Ensure processes is never undefined
+              processes={processes || []}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />

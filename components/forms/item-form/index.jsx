@@ -310,7 +310,6 @@ function ItemForm({ onSubmit, editData }) {
           )}
         />
 
-        {/* Additional optional fields */}
         <FormField
           control={form.control}
           name="uom"
