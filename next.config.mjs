@@ -4,4 +4,4 @@ const nextConfig = {
   // Additional App Router configurations
 };
 
-module.exports = nextConfig;
+export default nextConfig;
