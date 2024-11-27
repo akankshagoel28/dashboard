@@ -7,5 +7,5 @@
   
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.next/server/pages/index.html"
   status = 200
