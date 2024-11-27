@@ -1,4 +1,16 @@
-[[redirect]]
-from="/*"
-to="/index.html"
-status=200
+[build]
+  # Specify the directory where Next.js builds output
+  publish = ".next"
+  
+  # Build command for Next.js
+  command = "npm run build"
+
+[build.environment]
+  # Specify Node.js version compatible with your Next.js project
+  NODE_VERSION = "18"
+
+# Redirects for Next.js routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
