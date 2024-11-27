@@ -4,8 +4,13 @@
 
 [build.environment]
   NODE_VERSION = "22"
-  
+
 [[redirects]]
   from = "/*"
-  to = "/.next/server/pages/index.html"
+  to = "/index.html"
   status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Render-Mode = "ssr"
