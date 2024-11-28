@@ -14,10 +14,6 @@ function SidebarNavigation({
   setActiveSection,
   completionStatus,
 }) {
-  const recommendedSection = sections.find(
-    (s) => completionStatus[s.id] < 100
-  )?.id;
-
   return (
     <div className="space-y-6">
       <Card>
@@ -51,11 +47,6 @@ function SidebarNavigation({
                     <div className="text-sm text-gray-500">
                       {section.description}
                     </div>
-                    {recommendedSection === section.id && (
-                      <div className="text-xs text-blue-600 mt-1">
-                        Recommended next step
-                      </div>
-                    )}
                   </div>
                   {activeSection === section.id && (
                     <ArrowRight className="h-5 w-5 text-blue-500" />
