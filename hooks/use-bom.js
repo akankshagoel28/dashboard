@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { API_BASE_URL } from "@/lib/config";
 
 export const useBom = () => {
   const [bomItems, setBomItems] = useState([]);
