@@ -1,4 +1,5 @@
 // hooks/use-items.js
+import { API_BASE_URL } from "@/lib/config";
 import { useState, useCallback } from "react";
 
 export const useItems = () => {
@@ -10,9 +11,7 @@ export const useItems = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        "https://api-assignment.inveesync.in/items"
-      );
+      const response = await fetch(`${API_BASE_URL}/items`);
       const data = await response.json();
 
       if (!response.ok)
@@ -41,14 +40,11 @@ export const useItems = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        "https://api-assignment.inveesync.in/items",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(itemData),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemData),
+      });
       const data = await response.json();
 
       if (!response.ok)
@@ -80,16 +76,13 @@ export const useItems = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `https://api-assignment.inveesync.in/items/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(itemData),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(itemData),
+      });
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "Failed to update item");
@@ -115,7 +108,7 @@ export const useItems = () => {
 
         if (itemToDelete?.type === "sell") {
           const bomResponse = await fetch(
-            `https://api-assignment.inveesync.in/bom?item_id=${id}`
+            `${API_BASE_URL}/bom?item_id=${id}`
           );
           const bomData = await bomResponse.json();
 
@@ -126,12 +119,9 @@ export const useItems = () => {
           }
         }
 
-        const response = await fetch(
-          `https://api-assignment.inveesync.in/items/${id}`,
-          {
-            method: "DELETE",
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+          method: "DELETE",
+        });
 
         if (!response.ok) {
           const data = await response.json();

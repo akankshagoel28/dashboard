@@ -1,5 +1,6 @@
 // hooks/use-process-steps.js
 import { useState, useCallback } from "react";
+import { API_BASE_URL } from "@/lib/config";
 
 export const useProcessSteps = () => {
   const [processSteps, setProcessSteps] = useState([]);
@@ -11,7 +12,7 @@ export const useProcessSteps = () => {
     setError(null);
     try {
       const response = await fetch(
-        `https://api-assignment.inveesync.in/process-step?item_id=${itemId}`
+        `${API_BASE_URL}/process-step?item_id=${itemId}`
       );
       const data = await response.json();
       if (!response.ok)
@@ -33,20 +34,17 @@ export const useProcessSteps = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        "https://api-assignment.inveesync.in/process-step",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...stepData,
-            created_by: "user1",
-            last_updated_by: "user1",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/process-step`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...stepData,
+          created_by: "user1",
+          last_updated_by: "user1",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }),
+      });
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "Failed to add process step");
@@ -65,7 +63,7 @@ export const useProcessSteps = () => {
     setError(null);
     try {
       const response = await fetch(
-        `https://api-assignment.inveesync.in/process-step/${id}`,
+        `${API_BASE_URL}/process-step/${id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -98,7 +96,7 @@ export const useProcessSteps = () => {
     setError(null);
     try {
       const response = await fetch(
-        `https://api-assignment.inveesync.in/process-step/${id}`,
+        `${API_BASE_URL}/process-step/${id}`,
         {
           method: "DELETE",
         }

@@ -10,7 +10,7 @@ export const useBom = () => {
     setError(null);
     try {
       const response = await fetch(
-        `https://api-assignment.inveesync.in/bom?item_id=${itemId}`
+        `${API_BASE_URL}/bom?item_id=${itemId}`
       );
       const data = await response.json();
       if (!response.ok)
@@ -30,14 +30,11 @@ export const useBom = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        "https://api-assignment.inveesync.in/bom",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bomData),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/bom`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bomData),
+      });
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "Failed to add BOM item");
@@ -55,14 +52,11 @@ export const useBom = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `https://api-assignment.inveesync.in/bom/${id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bomData),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/bom/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bomData),
+      });
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "Failed to update BOM item");
@@ -82,12 +76,9 @@ export const useBom = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `https://api-assignment.inveesync.in/bom/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/bom/${id}`, {
+        method: "DELETE",
+      });
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "Failed to delete BOM item");

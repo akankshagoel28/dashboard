@@ -1,5 +1,6 @@
 // hooks/use-processes.js
 import { useState, useCallback } from "react";
+import { API_BASE_URL } from "@/lib/config";
 
 export const useProcesses = () => {
   const [processes, setProcesses] = useState([]);
@@ -10,9 +11,7 @@ export const useProcesses = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        "https://api-assignment.inveesync.in/process"
-      );
+      const response = await fetch(`${API_BASE_URL}/process`);
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "Failed to fetch processes");
@@ -32,20 +31,17 @@ export const useProcesses = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          "https://api-assignment.inveesync.in/process",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...processData,
-              created_by: "user1",
-              last_updated_by: "user1",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }),
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/process`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...processData,
+            created_by: "user1",
+            last_updated_by: "user1",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }),
+        });
         const data = await response.json();
         if (!response.ok)
           throw new Error(data.message || "Failed to add process");
@@ -68,7 +64,7 @@ export const useProcesses = () => {
       setError(null);
       try {
         const response = await fetch(
-          `https://api-assignment.inveesync.in/process/${id}`,
+          `${API_BASE_URL}/process/${id}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -100,7 +96,7 @@ export const useProcesses = () => {
       setError(null);
       try {
         const response = await fetch(
-          `https://api-assignment.inveesync.in/process/${id}`,
+          `${API_BASE_URL}/process/${id}`,
           {
             method: "DELETE",
           }
