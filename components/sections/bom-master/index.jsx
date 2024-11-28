@@ -1,7 +1,6 @@
-// components/sections/bom-master/index.jsx
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, Check, X } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,77 +9,23 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import ItemForm from "@/components/forms/item-form";
 import BomTable from "@/components/tables/bom-table";
 import { useBom } from "@/hooks/use-bom";
 import { useItems } from "@/hooks/use-items";
 import { useToast } from "@/hooks/use-toast";
 import BulkUpload from "@/components/bulk-upload";
+import BomForm from "@/components/forms/bom-form";
 
 function BomMaster() {
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [componentDialogOpen, setComponentDialogOpen] =
     useState(false);
-  const [selectedComponent, setSelectedComponent] = useState(null);
-  const [quantity, setQuantity] = useState("1");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("existing");
-
-  const handleBulkUpload = async (data) => {
-    try {
-      const results = await Promise.all(
-        data.map((row) =>
-          addBom({
-            item_id: parseInt(selectedItemId),
-            component_id: parseInt(row.component_id),
-            quantity: parseFloat(row.quantity),
-            created_by: "user1",
-            last_updated_by: "user1",
-          })
-        )
-      );
-
-      const failures = results.filter((r) => !r.success);
-      if (failures.length > 0) {
-        toast({
-          variant: "warning",
-          title: "Partial Success",
-          description: `${
-            results.length - failures.length
-          } items added, ${failures.length} failed`,
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: `${results.length} items added successfully`,
-        });
-      }
-
-      fetchBomByItemId(selectedItemId);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to process bulk upload",
-      });
-    }
-  };
 
   const {
     bomItems,
@@ -99,13 +44,8 @@ function BomMaster() {
   }, [fetchItems]);
 
   const purchaseItems = items.filter(
-    (item) =>
-      item.type === "purchase" &&
-      item.internal_item_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+    (item) => item.type === "purchase"
   );
-
   const sellItems = items.filter((item) => item.type === "sell");
 
   const getItemName = (id) => {
@@ -130,23 +70,10 @@ function BomMaster() {
     }
   };
 
-  const handleComponentSelect = (component) => {
-    if (isComponentAlreadyAdded(component.id)) {
-      toast({
-        variant: "destructive",
-        title: "Component already exists",
-        description:
-          "This component is already in the BOM. You can edit its quantity instead.",
-      });
-      return;
-    }
-    setSelectedComponent(component);
-    setQuantity("1");
-  };
-
-  const handleQuantitySubmit = async () => {
-    if (!selectedComponent) return;
-
+  const handleExistingComponentSubmit = async (
+    component,
+    quantity
+  ) => {
     const parsedQuantity = parseFloat(quantity);
     if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
       toast({
@@ -159,7 +86,7 @@ function BomMaster() {
 
     const bomData = {
       item_id: parseInt(selectedItemId),
-      component_id: selectedComponent.id,
+      component_id: component.id,
       quantity: parsedQuantity,
       created_by: "user1",
       last_updated_by: "user1",
@@ -173,8 +100,6 @@ function BomMaster() {
         description: "Component added to BOM successfully",
       });
       setComponentDialogOpen(false);
-      setSelectedComponent(null);
-      setQuantity("1");
       fetchBomByItemId(selectedItemId);
     } else {
       toast({
@@ -232,6 +157,46 @@ function BomMaster() {
         variant: "destructive",
         title: "Error",
         description: "Failed to create component",
+      });
+    }
+  };
+
+  const handleBulkUpload = async (data) => {
+    try {
+      const results = await Promise.all(
+        data.map((row) =>
+          addBom({
+            item_id: parseInt(selectedItemId),
+            component_id: parseInt(row.component_id),
+            quantity: parseFloat(row.quantity),
+            created_by: "user1",
+            last_updated_by: "user1",
+          })
+        )
+      );
+
+      const failures = results.filter((r) => !r.success);
+      if (failures.length > 0) {
+        toast({
+          variant: "warning",
+          title: "Partial Success",
+          description: `${
+            results.length - failures.length
+          } items added, ${failures.length} failed`,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `${results.length} items added successfully`,
+        });
+      }
+
+      fetchBomByItemId(selectedItemId);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process bulk upload",
       });
     }
   };
@@ -325,11 +290,6 @@ function BomMaster() {
         open={componentDialogOpen}
         onOpenChange={(open) => {
           setComponentDialogOpen(open);
-          if (!open) {
-            setSelectedComponent(null);
-            setQuantity("1");
-            setActiveTab("existing");
-          }
         }}
       >
         <DialogContent className="max-w-[800px] max-h-[90vh] flex flex-col p-0">
@@ -340,125 +300,13 @@ function BomMaster() {
               use as a component
             </DialogDescription>
           </DialogHeader>
-
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="flex-1"
-          >
-            <div className="px-6">
-              <TabsList className="w-full">
-                <TabsTrigger value="existing" className="flex-1">
-                  Existing Components
-                </TabsTrigger>
-                <TabsTrigger value="new" className="flex-1">
-                  Create New Component
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="existing" className="flex-1 mt-2">
-              <div className="px-6 pb-4">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search components..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <ScrollArea className="border-y">
-                <div className="divide-y p-6">
-                  {purchaseItems.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">
-                      No purchase items found
-                    </div>
-                  ) : (
-                    purchaseItems.map((item) => {
-                      const isAdded = isComponentAlreadyAdded(
-                        item.id
-                      );
-                      return (
-                        <Card
-                          key={item.id}
-                          className={`p-4 ${
-                            isAdded
-                              ? "opacity-50 cursor-not-allowed"
-                              : "hover:bg-accent cursor-pointer"
-                          } ${
-                            selectedComponent?.id === item.id
-                              ? "border-primary"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            !isAdded && handleComponentSelect(item)
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium">
-                                {item.internal_item_name}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                UoM: {item.uom}
-                              </div>
-                            </div>
-                            {isAdded ? (
-                              <span className="text-sm text-muted-foreground">
-                                Already added
-                              </span>
-                            ) : (
-                              <Button variant="ghost" size="sm">
-                                Select
-                              </Button>
-                            )}
-                          </div>
-                        </Card>
-                      );
-                    })
-                  )}
-                </div>
-              </ScrollArea>
-
-              {selectedComponent && (
-                <div className="p-6 border-t space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={handleQuantitySubmit}
-                  >
-                    Add Component
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="new" className="border-t">
-              <ScrollArea className="h-[500px]">
-                <div className="p-6">
-                  <ItemForm
-                    onSubmit={handleNewComponentSubmit}
-                    defaultType="purchase"
-                    disableTypeChange={true}
-                  />
-                </div>
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
+          <BomForm
+            purchaseItems={purchaseItems}
+            onExistingSubmit={handleExistingComponentSubmit}
+            onNewSubmit={handleNewComponentSubmit}
+            isComponentAlreadyAdded={isComponentAlreadyAdded}
+            onClose={() => setComponentDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 

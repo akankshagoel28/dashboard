@@ -1,356 +1,163 @@
-// components/forms/bom-form/index.jsx
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import ItemForm from "@/components/forms/item-form";
 
-const UOM_OPTIONS = [
-  { value: "Nos", label: "Numbers (NOS)" },
-  { value: "Kgs", label: "Kilograms (KGS)" },
-];
-
-function BomForm({ onSubmit, editData, items, selectedItemId }) {
-  const [open, setOpen] = useState(false);
-  const [newComponentDialog, setNewComponentDialog] = useState(false);
+function BomForm({
+  purchaseItems,
+  onExistingSubmit,
+  onNewSubmit,
+  isComponentAlreadyAdded,
+  onClose,
+}) {
+  const [selectedComponent, setSelectedComponent] = useState(null);
+  const [quantity, setQuantity] = useState("1");
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("existing");
 
-  const form = useForm({
-    defaultValues: editData
-      ? {
-          component_id: editData.component_id?.toString(),
-          quantity: editData.quantity?.toString(),
-        }
-      : {
-          component_id: "",
-          quantity: "",
-        },
-  });
-
-  const newComponentForm = useForm({
-    defaultValues: {
-      internal_item_name: "",
-      uom: "",
-    },
-  });
-
-  const handleSubmit = async (data) => {
-    onSubmit({
-      ...data,
-      item_id: selectedItemId,
-    });
-  };
-
-  const handleNewComponent = async (formData) => {
-    try {
-      await onSubmit({
-        is_new_component: true,
-        component_data: {
-          internal_item_name: formData.internal_item_name,
-          tenant_id: "1",
-          item_description: "New component",
-          uom: formData.uom,
-          type: "component",
-          max_buffer: 0,
-          min_buffer: 0,
-          customer_item_name: formData.internal_item_name,
-          is_deleted: false,
-          additional_attributes: {
-            avg_weight_needed: 0,
-            scrap_type: "",
-          },
-        },
-        quantity: form.getValues("quantity") || 1,
-      });
-
-      setNewComponentDialog(false);
-      setOpen(false);
-      newComponentForm.reset();
-    } catch (error) {
-      console.error("Error creating component:", error);
+  const handleComponentSelect = (component) => {
+    if (isComponentAlreadyAdded(component.id)) {
+      return;
     }
+    setSelectedComponent(component);
+    setQuantity("1");
   };
+
+  const handleQuantitySubmit = () => {
+    if (!selectedComponent) return;
+    onExistingSubmit(selectedComponent, quantity);
+  };
+
+  const filteredItems = purchaseItems.filter((item) =>
+    item.internal_item_name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="px-1 py-3">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-6"
-        >
-          <div className="grid gap-6">
-            <FormField
-              control={form.control}
-              name="component_id"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel className="text-base">
-                    Component *
-                  </FormLabel>
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn(
-                            "w-full justify-between h-10",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value
-                            ? items.find(
-                                (item) =>
-                                  item.id.toString() === field.value
-                              )?.internal_item_name || "New Component"
-                            : "Select component"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[400px] p-0"
-                      align="start"
-                    >
-                      <Command>
-                        <CommandInput
-                          placeholder="Search components..."
-                          onValueChange={setSearchTerm}
-                          className="h-9"
-                        />
-                        <CommandList>
-                          <ScrollArea className="h-[200px]">
-                            <CommandEmpty>
-                              No component found.
-                            </CommandEmpty>
-                            <CommandGroup heading="Existing Components">
-                              {items
-                                .filter((item) =>
-                                  item.internal_item_name
-                                    .toLowerCase()
-                                    .includes(
-                                      searchTerm.toLowerCase() &&
-                                        item.type == "purchase"
-                                    )
-                                )
-                                .map((item) => (
-                                  <CommandItem
-                                    key={item.id}
-                                    value={item.internal_item_name}
-                                    onSelect={() => {
-                                      form.setValue(
-                                        "component_id",
-                                        item.id.toString()
-                                      );
-                                      setOpen(false);
-                                    }}
-                                    className="flex items-center justify-between"
-                                  >
-                                    <div className="flex items-center">
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          item.id.toString() ===
-                                            field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                      <span>
-                                        {item.internal_item_name}
-                                      </span>
-                                    </div>
-                                    <span className="text-sm text-muted-foreground">
-                                      {item.uom}
-                                    </span>
-                                  </CommandItem>
-                                ))}
-                            </CommandGroup>
-                            <CommandSeparator className="my-1" />
-                            <CommandGroup>
-                              <CommandItem
-                                onSelect={() => {
-                                  setNewComponentDialog(true);
-                                  setOpen(false);
-                                }}
-                                className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                              >
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add new component
-                              </CommandItem>
-                            </CommandGroup>
-                          </ScrollArea>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormDescription>
-                    Select an existing component or create a new one
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <Tabs
+      value={activeTab}
+      onValueChange={setActiveTab}
+      className="flex-1"
+    >
+      <div className="px-6">
+        <TabsList className="w-full">
+          <TabsTrigger value="existing" className="flex-1">
+            Existing Components
+          </TabsTrigger>
+          <TabsTrigger value="new" className="flex-1">
+            Create New Component
+          </TabsTrigger>
+        </TabsList>
+      </div>
 
-            <FormField
-              control={form.control}
-              name="quantity"
-              rules={{
-                required: "Quantity is required",
-                min: {
-                  value: 0.01,
-                  message: "Quantity must be greater than 0",
-                },
-              }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">
-                    Quantity *
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      step="0.01"
-                      placeholder="Enter quantity"
-                      className="h-10"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Enter the required quantity for this component
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+      <TabsContent value="existing" className="flex-1 mt-2">
+        <div className="px-6 pb-4">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search components..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+        </div>
 
-          <Button type="submit" className="w-full">
-            {editData ? "Update BOM Entry" : "Create BOM Entry"}
-          </Button>
-        </form>
-      </Form>
+        <ScrollArea className="border-y">
+          <div className="divide-y p-6">
+            {filteredItems.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                No purchase items found
+              </div>
+            ) : (
+              filteredItems.map((item) => {
+                const isAdded = isComponentAlreadyAdded(item.id);
+                return (
+                  <Card
+                    key={item.id}
+                    className={`p-4 ${
+                      isAdded
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:bg-accent cursor-pointer"
+                    } ${
+                      selectedComponent?.id === item.id
+                        ? "border-primary"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      !isAdded && handleComponentSelect(item)
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">
+                          {item.internal_item_name}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          UoM: {item.uom}
+                        </div>
+                      </div>
+                      {isAdded ? (
+                        <span className="text-sm text-muted-foreground">
+                          Already added
+                        </span>
+                      ) : (
+                        <Button variant="ghost" size="sm">
+                          Select
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </ScrollArea>
 
-      <Dialog
-        open={newComponentDialog}
-        onOpenChange={setNewComponentDialog}
-      >
-        <DialogContent className="sm:max-w-[425px] p-4">
-          <DialogHeader>
-            <DialogTitle>Add New Component</DialogTitle>
-            <DialogDescription>
-              Create a new component to add to your Bill of Materials.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...newComponentForm}>
-            <form
-              onSubmit={newComponentForm.handleSubmit(
-                handleNewComponent
-              )}
-              className="space-y-4"
-            >
-              <FormField
-                control={newComponentForm.control}
-                name="internal_item_name"
-                rules={{ required: "Component name is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">
-                      Component Name *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter component name"
-                        className="h-10"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        {selectedComponent && (
+          <div className="p-6 border-t space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input
+                id="quantity"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="w-full"
               />
+            </div>
+            <Button className="w-full" onClick={handleQuantitySubmit}>
+              Add Component
+            </Button>
+          </div>
+        )}
+      </TabsContent>
 
-              <FormField
-                control={newComponentForm.control}
-                name="uom"
-                rules={{ required: "UoM is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">
-                      Unit of Measurement *
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Select UoM" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {UOM_OPTIONS.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            value={option.value}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" className="w-full mt-6">
-                Add Component
-              </Button>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </div>
+      <TabsContent value="new" className="border-t">
+        <ScrollArea className="h-[500px]">
+          <div className="p-6">
+            <ItemForm
+              onSubmit={onNewSubmit}
+              defaultType="purchase"
+              disableTypeChange={true}
+            />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+    </Tabs>
   );
 }
 
