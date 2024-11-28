@@ -1,16 +1,9 @@
 [build]
   command = "npm run build"
-  publish = ".next/standalone"
+  publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "22"
+  NODE_VERSION = "18"
 
-[[redirects]]
-  from = "/*"
-  to = "/.next/server/app/index.html"
-  status = 200
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Render-Mode = "ssr"
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
