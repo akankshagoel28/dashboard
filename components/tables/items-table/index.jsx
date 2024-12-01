@@ -61,6 +61,7 @@ function ItemsTable({ items, onEdit, onDelete }) {
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>ID</TableHead>
           <TableHead>Item Name</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>UoM</TableHead>
@@ -73,6 +74,7 @@ function ItemsTable({ items, onEdit, onDelete }) {
           <TableRow
             key={`${item.tenant_id}-${item.internal_item_name}`}
           >
+            <TableCell>{item.id}</TableCell>
             <TableCell className="font-medium">
               {item.internal_item_name}
             </TableCell>

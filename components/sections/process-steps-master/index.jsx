@@ -41,14 +41,11 @@ function ProcessStepsMaster() {
   useEffect(() => {
     fetchItems();
     fetchProcesses();
-    console.log("Processes:", processes); // Debug log
   }, [fetchItems, fetchProcesses, processes]);
 
   const handleItemSelect = async (itemId) => {
     setSelectedItemId(itemId);
-    console.log("Selected Item ID:", itemId); // Debug log
     const result = await fetchProcessSteps(itemId);
-    console.log("Fetched Process Steps:", result); // Debug log
   };
 
   const handleEdit = (process) => {
@@ -77,8 +74,6 @@ function ProcessStepsMaster() {
   };
 
   const handleSubmit = async (data) => {
-    console.log("Form Data:", data); // Debug log
-
     try {
       const formattedData = {
         item_id: parseInt(selectedItemId),
@@ -90,13 +85,9 @@ function ProcessStepsMaster() {
         updatedAt: new Date().toISOString(),
       };
 
-      console.log("Formatted Data:", formattedData); // Debug log
-
       const result = editData
         ? await updateProcessStep(editData.id, formattedData)
         : await addProcessStep(formattedData);
-
-      console.log("API Response:", result); // Debug log
 
       if (result.success) {
         toast({

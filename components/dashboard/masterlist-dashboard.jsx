@@ -25,16 +25,6 @@ function MasterlistDashboard() {
       title: "Bill of Materials",
       description: "Define item components and relationships",
     },
-    {
-      id: "processes",
-      title: "Processes",
-      description: "Configure production processes",
-    },
-    {
-      id: "processSteps",
-      title: "Process Steps",
-      description: "Set up detailed process steps",
-    },
   ];
 
   return (
@@ -42,8 +32,8 @@ function MasterlistDashboard() {
       <div className="flex justify-end mb-4"></div>
       <ProgressTracker completionStatus={completionStatus} />
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-3">
+      <div className="md:grid-cols-12 md:gap-6 md:grid">
+        <div className="md:col-span-3 md:block hidden">
           <SidebarNavigation
             sections={sections}
             activeSection={activeSection}

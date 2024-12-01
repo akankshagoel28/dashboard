@@ -8,8 +8,6 @@ import {
 } from "@/components/ui/tabs";
 import ItemsMaster from "@/components/sections/items-master";
 import BomMaster from "@/components/sections/bom-master";
-import ProcessMaster from "@/components/sections/process-master";
-import ProcessStepsMaster from "@/components/sections/process-steps-master";
 
 function MainContent({ sections, activeSection, setActiveSection }) {
   return (
@@ -28,14 +26,6 @@ function MainContent({ sections, activeSection, setActiveSection }) {
 
       <TabsContent value="bom">
         <BomMaster />
-      </TabsContent>
-
-      <TabsContent value="processes">
-        <ProcessMaster />
-      </TabsContent>
-
-      <TabsContent value="processSteps">
-        <ProcessStepsMaster />
       </TabsContent>
     </Tabs>
   );

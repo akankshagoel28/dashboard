@@ -18,12 +18,12 @@ function BomForm({
   onExistingSubmit,
   onNewSubmit,
   isComponentAlreadyAdded,
-  onClose,
 }) {
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [quantity, setQuantity] = useState("1");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("existing");
+  const [quantityError, setQuantityError] = useState("");
 
   const handleComponentSelect = (component) => {
     if (isComponentAlreadyAdded(component.id)) {
@@ -31,11 +31,36 @@ function BomForm({
     }
     setSelectedComponent(component);
     setQuantity("1");
+    setQuantityError("");
+  };
+
+  const handleQuantityChange = (e) => {
+    const value = e.target.value;
+    setQuantity(value);
+
+    const numValue = parseFloat(value);
+    if (!value) {
+      setQuantityError("Quantity is required");
+    } else if (isNaN(numValue)) {
+      setQuantityError("Please enter a valid number");
+    } else if (numValue < 1) {
+      setQuantityError("Quantity must be at least 1");
+    } else if (numValue > 100) {
+      setQuantityError("Quantity cannot exceed 100");
+    } else if (!Number.isInteger(numValue)) {
+      setQuantityError("Quantity must be a whole number");
+    } else {
+      setQuantityError("");
+    }
   };
 
   const handleQuantitySubmit = () => {
     if (!selectedComponent) return;
-    onExistingSubmit(selectedComponent, quantity);
+
+    const numQuantity = parseInt(quantity);
+    if (!quantityError && numQuantity >= 1 && numQuantity <= 100) {
+      onExistingSubmit(selectedComponent, numQuantity);
+    }
   };
 
   const filteredItems = purchaseItems.filter((item) =>
@@ -128,18 +153,30 @@ function BomForm({
         {selectedComponent && (
           <div className="p-6 border-t space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="quantity">Quantity (1-100)</Label>
               <Input
                 id="quantity"
                 type="number"
-                min="0.01"
-                step="0.01"
+                min="1"
+                max="100"
+                step="1"
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                className="w-full"
+                onChange={handleQuantityChange}
+                className={`w-full ${
+                  quantityError ? "border-red-500" : ""
+                }`}
               />
+              {quantityError && (
+                <div className="text-sm text-red-500">
+                  {quantityError}
+                </div>
+              )}
             </div>
-            <Button className="w-full" onClick={handleQuantitySubmit}>
+            <Button
+              className="w-full"
+              onClick={handleQuantitySubmit}
+              disabled={!!quantityError}
+            >
               Add Component
             </Button>
           </div>

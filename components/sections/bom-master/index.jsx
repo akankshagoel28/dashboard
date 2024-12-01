@@ -29,9 +29,11 @@ function BomMaster() {
 
   const {
     bomItems,
+    allBoms,
     isLoading,
     error,
     fetchBomByItemId,
+    fetchAllBoms,
     addBom,
     updateBom,
     deleteBom,
@@ -39,9 +41,13 @@ function BomMaster() {
   const { items, addItem, fetchItems } = useItems();
   const { toast } = useToast();
 
+  // Fetch all items and BOMs on component mount
   useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+    const initializeData = async () => {
+      await Promise.all([fetchItems(), fetchAllBoms()]);
+    };
+    initializeData();
+  }, [fetchItems, fetchAllBoms]);
 
   const purchaseItems = items.filter(
     (item) => item.type === "purchase"
@@ -163,14 +169,49 @@ function BomMaster() {
 
   const handleBulkUpload = async (data) => {
     try {
+      // validating all data before processing
+      const validData = data.filter((row) => {
+        //if all required fields exist and are not empty strings
+        if (
+          !row.item_id?.toString().trim() ||
+          !row.component_id?.toString().trim() ||
+          !row.quantity?.toString().trim()
+        ) {
+          return false;
+        }
+
+        //parsing values
+        const itemId = parseInt(row.item_id);
+        const componentId = parseInt(row.component_id);
+        const quantity = parseInt(row.quantity);
+
+        //if parsing was successful and values are valid
+        return (
+          !isNaN(itemId) &&
+          !isNaN(componentId) &&
+          !isNaN(quantity) &&
+          quantity > 0 &&
+          quantity <= 100
+        );
+      });
+
+      if (validData.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No valid data to process",
+        });
+        return;
+      }
+
       const results = await Promise.all(
-        data.map((row) =>
+        validData.map((row) =>
           addBom({
-            item_id: parseInt(selectedItemId),
+            item_id: parseInt(row.item_id),
             component_id: parseInt(row.component_id),
-            quantity: parseFloat(row.quantity),
-            created_by: "user1",
-            last_updated_by: "user1",
+            quantity: parseInt(row.quantity),
+            created_by: row.created_by || "user1",
+            last_updated_by: row.last_updated_by || "user1",
           })
         )
       );
@@ -191,12 +232,17 @@ function BomMaster() {
         });
       }
 
-      fetchBomByItemId(selectedItemId);
+      // Only fetch if we have a selected item
+      if (selectedItemId) {
+        fetchBomByItemId(selectedItemId);
+      }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to process bulk upload",
+        description:
+          "Failed to process bulk upload: " +
+          (error.message || "Unknown error"),
       });
     }
   };
@@ -250,14 +296,16 @@ function BomMaster() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Bill of Materials</h2>
-        <div className="flex gap-4">
+      <div className="flex md:flex-row flex-col justify-between md:items-center items-start">
+        <h2 className="text-xl font-semibold mb-4">
+          Bill of Materials
+        </h2>
+        <div className="flex flex-wrap gap-4">
           <Select
             onValueChange={handleItemSelect}
             value={selectedItemId?.toString()}
           >
-            <SelectTrigger className="w-[250px]">
+            <SelectTrigger className="w-56">
               <SelectValue placeholder="Select an item">
                 {selectedItemId
                   ? getItemName(selectedItemId)
@@ -281,7 +329,8 @@ function BomMaster() {
           </Button>
           <BulkUpload
             onUpload={handleBulkUpload}
-            templateFields={["component_id", "quantity"]}
+            items={items}
+            existingBomItems={allBoms}
           />
         </div>
       </div>
