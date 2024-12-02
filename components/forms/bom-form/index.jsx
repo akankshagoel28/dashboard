@@ -161,7 +161,37 @@ function BomForm({
           </ScrollArea>
         </div>
 
-        {/* Rest of the component remains the same */}
+        {selectedComponent && (
+          <div className="p-6 border-t space-y-4 flex-shrink-0 bg-background">
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity (1-100)</Label>
+              <Input
+                id="quantity"
+                type="number"
+                min="1"
+                max="100"
+                step="1"
+                value={quantity}
+                onChange={handleQuantityChange}
+                className={`w-full ${
+                  quantityError ? "border-red-500" : ""
+                }`}
+              />
+              {quantityError && (
+                <div className="text-sm text-red-500">
+                  {quantityError}
+                </div>
+              )}
+            </div>
+            <Button
+              className="w-full"
+              onClick={handleQuantitySubmit}
+              disabled={!!quantityError}
+            >
+              Add Component
+            </Button>
+          </div>
+        )}
       </TabsContent>
 
       <TabsContent value="new" className="flex-1">
