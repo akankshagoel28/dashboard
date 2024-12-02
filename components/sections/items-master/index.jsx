@@ -119,6 +119,7 @@ function ItemsMaster() {
                 <ItemForm
                   onSubmit={handleSubmit}
                   editData={editData}
+                  existingItems={items} // Pass your items array here
                 />
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,106 +31,138 @@ const UOM_OPTIONS = [
   { value: "Kgs", label: "Kilograms (KGS)" },
 ];
 
-// components/forms/item-form/index.jsx
-function ItemForm({ onSubmit, editData }) {
-  const defaultValues = editData
-    ? {
-        internal_item_name: editData.internal_item_name || "",
-        tenant_id: editData.tenant_id?.toString() || "",
-        item_description: editData.item_description || "",
-        uom: editData.uom || "",
-        type: editData.type || "",
-        max_buffer: editData.max_buffer?.toString() || "0",
-        min_buffer: editData.min_buffer?.toString() || "0",
-        customer_item_name: editData.customer_item_name || "",
-        drawing_revision_number:
-          editData.additional_attributes?.drawing_revision_number?.toString() ||
-          "",
-        drawing_revision_date:
-          editData.additional_attributes?.drawing_revision_date || "",
-        avg_weight_needed:
-          editData.additional_attributes?.avg_weight_needed?.toString() ||
-          "",
-        scrap_type: editData.additional_attributes?.scrap_type || "",
-        shelf_floor_alternate_name:
-          editData.additional_attributes
-            ?.shelf_floor_alternate_name || "",
-      }
-    : {
-        internal_item_name: "",
-        tenant_id: "",
-        item_description: "",
-        uom: "",
-        type: "",
-        max_buffer: "0",
-        min_buffer: "0",
-        customer_item_name: "",
-        drawing_revision_number: "",
-        drawing_revision_date: "",
-        avg_weight_needed: "",
-        scrap_type: "",
-        shelf_floor_alternate_name: "",
-      };
+function ItemForm({ onSubmit, editData, existingItems }) {
+  const defaultValues = {
+    internal_item_name: editData?.internal_item_name || "",
+    tenant_id: editData?.tenant_id?.toString() || "",
+    item_description: editData?.item_description || "",
+    uom: editData?.uom || "",
+    type: editData?.type || "",
+    max_buffer: editData?.max_buffer?.toString() || "0",
+    min_buffer: editData?.min_buffer?.toString() || "0",
+    customer_item_name: editData?.customer_item_name || "",
+    drawing_revision_number:
+      editData?.additional_attributes?.drawing_revision_number?.toString() ||
+      "0",
+    drawing_revision_date:
+      editData?.additional_attributes?.drawing_revision_date || "",
+    avg_weight_needed:
+      editData?.additional_attributes?.avg_weight_needed?.toString() ||
+      "0",
+    scrap_type: editData?.additional_attributes?.scrap_type || "",
+    shelf_floor_alternate_name:
+      editData?.additional_attributes?.shelf_floor_alternate_name ||
+      "",
+  };
 
   const form = useForm({
     defaultValues,
+    mode: "onChange",
   });
 
-  const selectedType = form.watch("type");
+  const selectedType = form.watch("type") || "";
+  const maxBuffer = form.watch("max_buffer") || "0";
+  const minBuffer = form.watch("min_buffer") || "0";
+
+  useEffect(() => {
+    const maxVal = parseInt(maxBuffer || "0");
+    const minVal = parseInt(minBuffer || "0");
+    if (maxVal < minVal) {
+      form.setError("max_buffer", {
+        type: "validation",
+        message:
+          "Max buffer must be greater than or equal to min buffer",
+      });
+    } else {
+      form.clearErrors("max_buffer");
+    }
+  }, [maxBuffer, minBuffer, form]);
 
   const handleSubmit = async (data) => {
-    // Validate required fields
-    if (!data.internal_item_name || !data.tenant_id) {
+    form.clearErrors();
+    const errors = [];
+
+    const isDuplicate = existingItems?.some(
+      (item) =>
+        item.internal_item_name === data.internal_item_name &&
+        item.tenant_id.toString() === data.tenant_id &&
+        item.id !== editData?.id
+    );
+
+    if (isDuplicate) {
+      errors.push(
+        "This internal item name already exists for this tenant"
+      );
+    }
+
+    if (selectedType === "sell" && !data.scrap_type?.trim()) {
+      errors.push("Scrap type is required for sell items");
+    }
+
+    if (["sell", "purchase"].includes(selectedType)) {
+      if (!data.min_buffer && data.min_buffer !== "0") {
+        errors.push(
+          "Min buffer is required for sell and purchase items"
+        );
+      }
+    }
+
+    const maxBufferNum = parseInt(data.max_buffer || "0");
+    const minBufferNum = parseInt(data.min_buffer || "0");
+
+    if (maxBufferNum < minBufferNum) {
+      errors.push(
+        "Max buffer must be greater than or equal to min buffer"
+      );
+    }
+
+    if (errors.length > 0) {
       form.setError("root", {
-        message: "Please fill in all required fields",
+        type: "validation",
+        message: errors.join(", "),
       });
       return;
     }
 
-    // Validate scrap_type for sell/purchase types
-    if (
-      ["sell", "purchase"].includes(data.type) &&
-      !data.scrap_type
-    ) {
+    try {
+      const formattedData = {
+        internal_item_name: data.internal_item_name,
+        tenant_id: parseInt(data.tenant_id || "0"),
+        item_description: data.item_description || "",
+        uom: data.uom || "",
+        created_by: "user1",
+        last_updated_by: "user1",
+        type: data.type || "",
+        max_buffer: parseInt(data.max_buffer || "0"),
+        min_buffer: parseInt(data.min_buffer || "0"),
+        customer_item_name: data.customer_item_name || "",
+        is_deleted: false,
+        additional_attributes: {
+          drawing_revision_number: parseInt(
+            data.drawing_revision_number || "0"
+          ),
+          drawing_revision_date: data.drawing_revision_date || "",
+          avg_weight_needed: parseFloat(
+            data.avg_weight_needed || "0"
+          ),
+          scrap_type: data.scrap_type || "",
+          shelf_floor_alternate_name:
+            data.shelf_floor_alternate_name || "",
+        },
+      };
+
+      if (editData?.id) {
+        formattedData.id = editData.id;
+      }
+
+      await onSubmit(formattedData);
+    } catch (error) {
       form.setError("root", {
-        message: "Scrap type is required for sell/purchase items",
+        type: "backend",
+        message:
+          error.message || "An error occurred while saving the item",
       });
-      return;
     }
-
-    // Format data for API
-    const formattedData = {
-      internal_item_name: data.internal_item_name,
-      tenant_id: parseInt(data.tenant_id),
-      item_description: data.item_description || "", // Empty string instead of null
-      uom: data.uom || "",
-      created_by: "user1",
-      last_updated_by: "user1",
-      type: data.type || "",
-      max_buffer: parseInt(data.max_buffer || "0"),
-      min_buffer: parseInt(data.min_buffer || "0"),
-      customer_item_name: data.customer_item_name || "",
-      is_deleted: false,
-      additional_attributes: {
-        drawing_revision_number: data.drawing_revision_number
-          ? parseInt(data.drawing_revision_number)
-          : 0,
-        drawing_revision_date: data.drawing_revision_date || "",
-        avg_weight_needed: data.avg_weight_needed
-          ? parseFloat(data.avg_weight_needed)
-          : 0,
-        scrap_type: data.scrap_type || "",
-        shelf_floor_alternate_name:
-          data.shelf_floor_alternate_name || "",
-      },
-    };
-
-    // If editing, preserve the id
-    if (editData?.id) {
-      formattedData.id = editData.id;
-    }
-
-    onSubmit(formattedData);
   };
 
   return (
@@ -203,12 +235,13 @@ function ItemForm({ onSubmit, editData }) {
         <FormField
           control={form.control}
           name="type"
+          rules={{ required: "Type is required" }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Type</FormLabel>
+              <FormLabel>Type *</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value || ""}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -223,9 +256,7 @@ function ItemForm({ onSubmit, editData }) {
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>
-                Optional - Status will be pending if not filled
-              </FormDescription>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -236,11 +267,15 @@ function ItemForm({ onSubmit, editData }) {
             name="scrap_type"
             rules={{
               required:
-                "Scrap type is required for sell/purchase items",
+                selectedType === "sell"
+                  ? "Scrap type is required for sell items"
+                  : false,
             }}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Scrap Type *</FormLabel>
+                <FormLabel>
+                  Scrap Type {selectedType === "sell" ? "*" : ""}
+                </FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Enter scrap type" />
                 </FormControl>
@@ -254,10 +289,21 @@ function ItemForm({ onSubmit, editData }) {
           <FormField
             control={form.control}
             name="max_buffer"
-            rules={{ required: "Max buffer is required" }}
+            rules={{
+              validate: {
+                minBuffer: (value) => {
+                  const max = parseInt(value || "0");
+                  const min = parseInt(minBuffer || "0");
+                  return (
+                    max >= min ||
+                    "Max buffer must be greater than or equal to min buffer"
+                  );
+                },
+              },
+            }}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Max Buffer *</FormLabel>
+                <FormLabel>Max Buffer</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -274,10 +320,27 @@ function ItemForm({ onSubmit, editData }) {
           <FormField
             control={form.control}
             name="min_buffer"
-            rules={{ required: "Min buffer is required" }}
+            rules={{
+              validate: {
+                required: (value) => {
+                  if (["sell", "purchase"].includes(selectedType)) {
+                    return (
+                      (value !== undefined && value !== "") ||
+                      "Min buffer is required for sell and purchase items"
+                    );
+                  }
+                  return true;
+                },
+              },
+            }}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Min Buffer *</FormLabel>
+                <FormLabel>
+                  Min Buffer{" "}
+                  {["sell", "purchase"].includes(selectedType)
+                    ? "*"
+                    : ""}
+                </FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -313,12 +376,13 @@ function ItemForm({ onSubmit, editData }) {
         <FormField
           control={form.control}
           name="uom"
+          rules={{ required: "UoM is required" }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Unit of Measurement</FormLabel>
+              <FormLabel>Unit of Measurement *</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value || ""}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -333,9 +397,7 @@ function ItemForm({ onSubmit, editData }) {
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>
-                Optional - Status will be pending if not filled
-              </FormDescription>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -351,12 +413,11 @@ function ItemForm({ onSubmit, editData }) {
                   {...field}
                   type="number"
                   step="0.01"
+                  min="0"
                   placeholder="Enter average weight"
                 />
               </FormControl>
-              <FormDescription>
-                Optional - Status will be pending if not filled
-              </FormDescription>
+              <FormDescription>Optional</FormDescription>
             </FormItem>
           )}
         />
@@ -372,6 +433,7 @@ function ItemForm({ onSubmit, editData }) {
                   <Input
                     {...field}
                     type="number"
+                    min="0"
                     placeholder="Enter revision number"
                   />
                 </FormControl>

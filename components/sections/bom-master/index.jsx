@@ -15,12 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import BomTable from "@/components/tables/bom-table";
 import { useBom } from "@/hooks/use-bom";
 import { useItems } from "@/hooks/use-items";
 import { useToast } from "@/hooks/use-toast";
 import BulkUpload from "@/components/bulk-upload";
 import BomForm from "@/components/forms/bom-form";
+import PendingBom from "@/components/sections/pending-bom";
 
 function BomMaster() {
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -296,50 +303,103 @@ function BomMaster() {
 
   return (
     <div className="space-y-6">
-      <div className="flex md:flex-row flex-col justify-between md:items-center items-start">
-        <h2 className="text-xl font-semibold mb-4">
-          Bill of Materials
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <Select
-            onValueChange={handleItemSelect}
-            value={selectedItemId?.toString()}
-          >
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder="Select an item">
-                {selectedItemId
-                  ? getItemName(selectedItemId)
-                  : "Select an item"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {sellItems.map((item) => (
-                <SelectItem key={item.id} value={item.id.toString()}>
-                  {item.internal_item_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            onClick={() => setComponentDialogOpen(true)}
-            disabled={!selectedItemId}
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Component
-          </Button>
-          <BulkUpload
-            onUpload={handleBulkUpload}
-            items={items}
-            existingBomItems={allBoms}
-          />
-        </div>
+      <div className="flex justify-between">
+        <h2 className="text-xl font-semibold">Bill of Materials</h2>
       </div>
+
+      <Tabs defaultValue="active">
+        <TabsList>
+          <TabsTrigger value="active">Active BOMs</TabsTrigger>
+          <TabsTrigger value="pending">
+            Pending BOMs
+            {items.length > 0 && (
+              <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                {
+                  items.filter(
+                    (item) =>
+                      item.type === "sell" &&
+                      !allBoms.some((bom) => bom.item_id === item.id)
+                  ).length
+                }
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active" className="space-y-6">
+          <div className="flex flex-wrap gap-4 justify-end">
+            <Select
+              onValueChange={handleItemSelect}
+              value={selectedItemId?.toString()}
+            >
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="Select an item">
+                  {selectedItemId
+                    ? getItemName(selectedItemId)
+                    : "Select an item"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {sellItems.map((item) => (
+                  <SelectItem
+                    key={item.id}
+                    value={item.id.toString()}
+                  >
+                    {item.internal_item_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={() => setComponentDialogOpen(true)}
+              disabled={!selectedItemId}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Component
+            </Button>
+            <BulkUpload
+              onUpload={handleBulkUpload}
+              items={items}
+              existingBomItems={allBoms}
+            />
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center p-8">Loading...</div>
+          ) : error ? (
+            <div className="text-red-500">{error}</div>
+          ) : (
+            selectedItemId && (
+              <BomTable
+                bomItems={bomItems}
+                items={items}
+                onQuantityChange={handleQuantityUpdate}
+                onDelete={handleDelete}
+              />
+            )
+          )}
+        </TabsContent>
+
+        <TabsContent value="pending">
+          <PendingBom
+            items={items}
+            bomItems={allBoms}
+            onItemSelect={(itemId) => {
+              handleItemSelect(itemId.toString());
+              const activeTab = document.querySelector(
+                '[data-value="active"]'
+              );
+              if (activeTab) {
+                activeTab.click();
+              }
+            }}
+          />
+        </TabsContent>
+      </Tabs>
 
       <Dialog
         open={componentDialogOpen}
-        onOpenChange={(open) => {
-          setComponentDialogOpen(open);
-        }}
+        onOpenChange={setComponentDialogOpen}
       >
         <DialogContent className="max-w-[800px] max-h-[90vh] flex flex-col p-0">
           <DialogHeader className="p-6 pb-4">
@@ -358,21 +418,6 @@ function BomMaster() {
           />
         </DialogContent>
       </Dialog>
-
-      {isLoading ? (
-        <div className="flex justify-center p-8">Loading...</div>
-      ) : error ? (
-        <div className="text-red-500">{error}</div>
-      ) : (
-        selectedItemId && (
-          <BomTable
-            bomItems={bomItems}
-            items={items}
-            onQuantityChange={handleQuantityUpdate}
-            onDelete={handleDelete}
-          />
-        )
-      )}
     </div>
   );
 }
