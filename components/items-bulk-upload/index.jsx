@@ -267,15 +267,25 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
           Bulk Upload
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-[900px] max-h-[80vh] flex flex-col p-4">
+      <DialogContent
+        className={`p-4 ${
+          csvData.length > 0
+            ? "w-11/12 max-w-[90vw] h-[90vh]"
+            : "max-w-[500px]"
+        }`}
+      >
         <DialogHeader>
           <DialogTitle className="mb-2">
             Bulk Upload Items
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 flex-1 flex flex-col">
-          <div className="flex gap-4">
+        <div
+          className={`flex flex-col ${
+            csvData.length > 0 ? "h-[calc(100%-6rem)]" : ""
+          } gap-4`}
+        >
+          <div className="flex gap-4 shrink-0">
             <Button variant="outline" onClick={downloadTemplate}>
               <FileDown className="h-4 w-4 mr-2" />
               Download Template
@@ -290,187 +300,194 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
               />
             </div>
           </div>
-
           {csvData.length > 0 && (
-            <ScrollArea className="flex-1 border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Row</TableHead>
-                    <TableHead>Internal Name</TableHead>
-                    <TableHead>Tenant ID</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>UoM</TableHead>
-                    <TableHead>Min Buffer</TableHead>
-                    <TableHead>Max Buffer</TableHead>
-                    <TableHead>Avg Weight Needed</TableHead>
-                    <TableHead>Scrap Type</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {csvData.map((row, rowIndex) => (
-                    <TableRow key={rowIndex}>
-                      <TableCell>{rowIndex + 1}</TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.internal_item_name}
-                          onChange={(e) =>
-                            handleCellChange(
-                              rowIndex,
-                              "internal_item_name",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={row.tenant_id}
-                          onChange={(e) =>
-                            handleCellChange(
-                              rowIndex,
-                              "tenant_id",
-                              e.target.value
-                            )
-                          }
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={row.type}
-                          onValueChange={(value) =>
-                            handleCellChange(rowIndex, "type", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ITEM_TYPES.map((type) => (
-                              <SelectItem
-                                key={type.value}
-                                value={type.value}
-                              >
-                                {type.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={row.uom}
-                          onValueChange={(value) =>
-                            handleCellChange(rowIndex, "uom", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select UoM" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {UOM_OPTIONS.map((uom) => (
-                              <SelectItem
-                                key={uom.value}
-                                value={uom.value}
-                              >
-                                {uom.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.min_buffer}
-                          onChange={(e) =>
-                            handleCellChange(
-                              rowIndex,
-                              "min_buffer",
-                              e.target.value
-                            )
-                          }
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.max_buffer}
-                          onChange={(e) =>
-                            handleCellChange(
-                              rowIndex,
-                              "max_buffer",
-                              e.target.value
-                            )
-                          }
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={
-                            row.avg_weight_needed ? "true" : "false"
-                          }
-                          onValueChange={(value) =>
-                            handleCellChange(
-                              rowIndex,
-                              "avg_weight_needed",
-                              value === "true"
-                            )
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {YES_NO_OPTIONS.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.scrap_type}
-                          onChange={(e) =>
-                            handleCellChange(
-                              rowIndex,
-                              "scrap_type",
-                              e.target.value
-                            )
-                          }
-                          className="w-12"
-                        />
-                      </TableCell>
+            <div className="flex-1 min-h-0">
+              <ScrollArea className="h-full border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Row</TableHead>
+                      <TableHead>Internal Name</TableHead>
+                      <TableHead>Tenant ID</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>UoM</TableHead>
+                      <TableHead>Min Buffer</TableHead>
+                      <TableHead>Max Buffer</TableHead>
+                      <TableHead>Avg Weight Needed</TableHead>
+                      <TableHead>Scrap Type</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
+                  </TableHeader>
+                  <TableBody>
+                    {csvData.map((row, rowIndex) => (
+                      <TableRow key={rowIndex}>
+                        <TableCell>{rowIndex + 1}</TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.internal_item_name}
+                            onChange={(e) =>
+                              handleCellChange(
+                                rowIndex,
+                                "internal_item_name",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={row.tenant_id}
+                            onChange={(e) =>
+                              handleCellChange(
+                                rowIndex,
+                                "tenant_id",
+                                e.target.value
+                              )
+                            }
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.type}
+                            onValueChange={(value) =>
+                              handleCellChange(
+                                rowIndex,
+                                "type",
+                                value
+                              )
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ITEM_TYPES.map((type) => (
+                                <SelectItem
+                                  key={type.value}
+                                  value={type.value}
+                                >
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.uom}
+                            onValueChange={(value) =>
+                              handleCellChange(rowIndex, "uom", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select UoM" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {UOM_OPTIONS.map((uom) => (
+                                <SelectItem
+                                  key={uom.value}
+                                  value={uom.value}
+                                >
+                                  {uom.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.min_buffer}
+                            onChange={(e) =>
+                              handleCellChange(
+                                rowIndex,
+                                "min_buffer",
+                                e.target.value
+                              )
+                            }
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.max_buffer}
+                            onChange={(e) =>
+                              handleCellChange(
+                                rowIndex,
+                                "max_buffer",
+                                e.target.value
+                              )
+                            }
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={
+                              row.avg_weight_needed ? "true" : "false"
+                            }
+                            onValueChange={(value) =>
+                              handleCellChange(
+                                rowIndex,
+                                "avg_weight_needed",
+                                value === "true"
+                              )
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {YES_NO_OPTIONS.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.scrap_type}
+                            onChange={(e) =>
+                              handleCellChange(
+                                rowIndex,
+                                "scrap_type",
+                                e.target.value
+                              )
+                            }
+                            className="w-20"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </div>
           )}
 
           {errors.length > 0 && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <ul className="list-disc pl-4">
-                  {errors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
+            <div className="shrink-0">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <ul className="list-disc pl-4">
+                    {errors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </div>
           )}
 
           <Button
@@ -478,7 +495,7 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
             disabled={
               !csvData.length || uploading || errors.length > 0
             }
-            className="w-full"
+            className="w-full shrink-0"
           >
             {uploading ? "Uploading..." : "Upload"}
           </Button>
