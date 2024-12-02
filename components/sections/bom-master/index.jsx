@@ -410,7 +410,10 @@ function BomMaster() {
             </DialogDescription>
           </DialogHeader>
           <BomForm
-            purchaseItems={purchaseItems}
+            purchaseItems={items.filter(
+              (item) =>
+                item.type === "purchase" || item.type === "component"
+            )}
             onExistingSubmit={handleExistingComponentSubmit}
             onNewSubmit={handleNewComponentSubmit}
             isComponentAlreadyAdded={isComponentAlreadyAdded}

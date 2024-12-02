@@ -42,10 +42,10 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
     "last_updated_by",
   ];
 
-  const sellItems = items.filter((item) => item.type === "sell");
-  const purchaseItems = items.filter(
-    (item) => item.type === "purchase"
+  const validComponents = items.filter(
+    (item) => item.type === "purchase" || item.type === "component"
   );
+  const sellItems = items.filter((item) => item.type === "sell");
 
   const downloadTemplate = () => {
     const csv = Papa.unparse([templateFields]);
@@ -101,7 +101,7 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
   const validateData = (data) => {
     const errors = [];
     const sellItemIds = sellItems.map((item) => item.id.toString());
-    const purchaseItemIds = purchaseItems.map((item) =>
+    const validComponentIds = validComponents.map((item) =>
       item.id.toString()
     );
     const combinationsInCsv = new Set();
@@ -122,10 +122,10 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
       if (!row.component_id) {
         errors.push(`Row ${rowNum}: Component ID is required`);
       } else if (
-        !purchaseItemIds.includes(row.component_id?.toString())
+        !validComponentIds.includes(row.component_id?.toString())
       ) {
         errors.push(
-          `Row ${rowNum}: Invalid component_id. Component must be of type "purchase"`
+          `Row ${rowNum}: Invalid component_id. Component must be of type "purchase" or "component"`
         );
       } else {
         const combination = `${row.item_id}-${row.component_id}`;
@@ -135,7 +135,7 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
           const itemName = sellItems.find(
             (item) => item.id.toString() === row.item_id?.toString()
           )?.internal_item_name;
-          const componentName = purchaseItems.find(
+          const componentName = validComponents.find(
             (item) =>
               item.id.toString() === row.component_id?.toString()
           )?.internal_item_name;
@@ -153,7 +153,6 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
         combinationsInCsv.add(combination);
       }
 
-      // Validate quantity
       const quantity = parseInt(row.quantity);
       if (!row.quantity) {
         errors.push(`Row ${rowNum}: Quantity is required`);
@@ -181,10 +180,9 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
 
   const handleCellChange = (rowIndex, field, value) => {
     const updatedData = [...csvData];
-    // Ensure we're storing the value as a string initially
     updatedData[rowIndex] = {
       ...updatedData[rowIndex],
-      [field]: value || "", // Use empty string instead of null/undefined
+      [field]: value || "",
     };
     setCsvData(updatedData);
     setErrors(validateData(updatedData));
@@ -200,14 +198,12 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
     setUploading(true);
     try {
       const preparedData = csvData.map((row) => {
-        // Only parse to integer if we have a valid value
         const itemId = row.item_id ? parseInt(row.item_id) : null;
         const componentId = row.component_id
           ? parseInt(row.component_id)
           : null;
         const quantity = row.quantity ? parseInt(row.quantity) : null;
 
-        // Throw error if any required numeric fields are invalid
         if (!itemId || !componentId || !quantity) {
           throw new Error("All required fields must be filled out");
         }
@@ -271,7 +267,9 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
                   <TableRow>
                     <TableHead>Row</TableHead>
                     <TableHead>Item (Sell)</TableHead>
-                    <TableHead>Component (Purchase)</TableHead>
+                    <TableHead>
+                      Component (Purchase/Component)
+                    </TableHead>
                     <TableHead>Quantity</TableHead>
                     <TableHead>Created By</TableHead>
                     <TableHead>Last Updated By</TableHead>
@@ -299,7 +297,7 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
                             {sellItems.map((item) => (
                               <SelectItem
                                 key={item.id}
-                                value={item.id.toString()} // Ensure we're using strings for value
+                                value={item.id.toString()}
                               >
                                 {item.internal_item_name}
                               </SelectItem>
@@ -322,12 +320,19 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
                             <SelectValue placeholder="Select component" />
                           </SelectTrigger>
                           <SelectContent>
-                            {purchaseItems.map((item) => (
+                            {validComponents.map((item) => (
                               <SelectItem
                                 key={item.id}
                                 value={item.id.toString()}
                               >
-                                {item.internal_item_name}
+                                <div className="flex justify-between items-center gap-2">
+                                  <span>
+                                    {item.internal_item_name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    ({item.type})
+                                  </span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>

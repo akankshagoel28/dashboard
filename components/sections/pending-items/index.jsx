@@ -1,4 +1,3 @@
-// components/sections/pending-items/index.jsx
 import React from "react";
 import {
   Card,
@@ -16,8 +15,6 @@ function getMissingFields(item) {
   if (!item.max_buffer) missing.push("Max Buffer");
   if (!item.min_buffer) missing.push("Min Buffer");
   if (!item.customer_item_name) missing.push("Customer Item Name");
-  if (!item.additional_attributes?.avg_weight_needed)
-    missing.push("Average Weight");
   if (
     ["sell", "purchase"].includes(item.type) &&
     !item.additional_attributes?.scrap_type
@@ -38,7 +35,6 @@ function PendingItems({ items, onResolve }) {
       item.max_buffer &&
       item.min_buffer &&
       item.customer_item_name &&
-      item.additional_attributes?.avg_weight_needed &&
       (!["sell", "purchase"].includes(item.type) ||
         item.additional_attributes?.scrap_type)
     );

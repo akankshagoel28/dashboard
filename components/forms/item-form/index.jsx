@@ -24,13 +24,18 @@ import { AlertCircle } from "lucide-react";
 const ITEM_TYPES = [
   { value: "sell", label: "Sell" },
   { value: "purchase", label: "Purchase" },
+  { value: "component", label: "Component" },
+];
+
+const YES_NO_OPTIONS = [
+  { value: "true", label: "Yes" },
+  { value: "false", label: "No" },
 ];
 
 const UOM_OPTIONS = [
   { value: "Nos", label: "Numbers (NOS)" },
   { value: "Kgs", label: "Kilograms (KGS)" },
 ];
-
 function ItemForm({ onSubmit, editData, existingItems }) {
   const defaultValues = {
     internal_item_name: editData?.internal_item_name || "",
@@ -47,8 +52,7 @@ function ItemForm({ onSubmit, editData, existingItems }) {
     drawing_revision_date:
       editData?.additional_attributes?.drawing_revision_date || "",
     avg_weight_needed:
-      editData?.additional_attributes?.avg_weight_needed?.toString() ||
-      "0",
+      editData?.additional_attributes?.avg_weight_needed || false, // Changed to boolean
     scrap_type: editData?.additional_attributes?.scrap_type || "",
     shelf_floor_alternate_name:
       editData?.additional_attributes?.shelf_floor_alternate_name ||
@@ -142,9 +146,7 @@ function ItemForm({ onSubmit, editData, existingItems }) {
             data.drawing_revision_number || "0"
           ),
           drawing_revision_date: data.drawing_revision_date || "",
-          avg_weight_needed: parseFloat(
-            data.avg_weight_needed || "0"
-          ),
+          avg_weight_needed: data.avg_weight_needed, // Now just passing the boolean value
           scrap_type: data.scrap_type || "",
           shelf_floor_alternate_name:
             data.shelf_floor_alternate_name || "",
@@ -408,16 +410,31 @@ function ItemForm({ onSubmit, editData, existingItems }) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Average Weight Needed</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Enter average weight"
-                />
-              </FormControl>
-              <FormDescription>Optional</FormDescription>
+              <Select
+                onValueChange={(value) =>
+                  field.onChange(value === "true")
+                }
+                value={field.value ? "true" : "false"}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select option" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {YES_NO_OPTIONS.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select if average weight calculation is needed
+              </FormDescription>
             </FormItem>
           )}
         />
