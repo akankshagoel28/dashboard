@@ -327,7 +327,7 @@ function BomMaster() {
         </TabsList>
 
         <TabsContent value="active" className="space-y-6">
-          <div className="flex flex-wrap gap-4 justify-end">
+          <div className="flex flex-wrap gap-4 justify-start">
             <Select
               onValueChange={handleItemSelect}
               value={selectedItemId?.toString()}

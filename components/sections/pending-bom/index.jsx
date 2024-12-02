@@ -83,8 +83,8 @@ function PendingBom({ items, bomItems, onItemSelect }) {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="sell">
+          <TabsList className="grid w-full grid-cols-2 pb-24 md:pb-2">
+            <TabsTrigger value="sell" className="text-wrap ">
               Sell Items Without BOM
               {sellItemsWithoutBom.length > 0 && (
                 <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
@@ -92,7 +92,7 @@ function PendingBom({ items, bomItems, onItemSelect }) {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="purchase">
+            <TabsTrigger value="purchase" className="text-wrap ">
               Unused Purchase Items
               {unusedPurchaseItems.length > 0 && (
                 <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
