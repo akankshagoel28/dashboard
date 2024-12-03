@@ -36,8 +36,8 @@ const ITEM_TYPES = [
 ];
 
 const UOM_OPTIONS = [
-  { value: "Nos", label: "Numbers (NOS)" },
-  { value: "Kgs", label: "Kilograms (KGS)" },
+  { value: "nos", label: "Numbers (NOS)" },
+  { value: "kgs", label: "Kilograms (KGS)" },
 ];
 
 const YES_NO_OPTIONS = [
@@ -138,14 +138,18 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
           max_buffer: row.max_buffer || "0",
           min_buffer: row.min_buffer || "0",
           customer_item_name: row.customer_item_name || "",
-          drawing_revision_number: row.drawing_revision_number || "0",
-          drawing_revision_date: row.drawing_revision_date || "",
+          drawing_revision_number:
+            row.additional_attributes__drawing_revision_number || "0",
+          drawing_revision_date:
+            row.additional_attributes__drawing_revision_date || "",
           avg_weight_needed:
-            (row.avg_weight_needed || "false").toLowerCase() ===
-            "true",
-          scrap_type: row.scrap_type || "",
+            (
+              row.additional_attributes__avg_weight_needed || "false"
+            ).toLowerCase() === "true",
+          scrap_type: row.additional_attributes__scrap_type || "",
           shelf_floor_alternate_name:
-            row.shelf_floor_alternate_name || "",
+            row.additional_attributes__shelf_floor_alternate_name ||
+            "",
           created_by: row.created_by || "user1",
           last_updated_by: row.last_updated_by || "user1",
         }));
@@ -269,13 +273,16 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
         is_deleted: false,
         additional_attributes: {
           drawing_revision_number: parseInt(
-            row.drawing_revision_number || "0"
+            row.additional_attributes__drawing_revision_number || "0"
           ),
-          drawing_revision_date: row.drawing_revision_date || "",
-          avg_weight_needed: row.avg_weight_needed,
-          scrap_type: row.scrap_type || "",
+          drawing_revision_date:
+            row.additional_attributes__drawing_revision_date || "",
+          avg_weight_needed:
+            row.additional_attributes__avg_weight_needed,
+          scrap_type: row.additional_attributes__scrap_type || "",
           shelf_floor_alternate_name:
-            row.shelf_floor_alternate_name || "",
+            row.additional_attributes__shelf_floor_alternate_name ||
+            "",
         },
         created_by: row.created_by || "user1",
         last_updated_by: row.last_updated_by || "user1",

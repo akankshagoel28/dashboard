@@ -33,8 +33,8 @@ const YES_NO_OPTIONS = [
 ];
 
 const UOM_OPTIONS = [
-  { value: "Nos", label: "Numbers (NOS)" },
-  { value: "Kgs", label: "Kilograms (KGS)" },
+  { value: "nos", label: "Numbers (NOS)" },
+  { value: "kgs", label: "Kilograms (KGS)" },
 ];
 function ItemForm({ onSubmit, editData, existingItems }) {
   const defaultValues = {
