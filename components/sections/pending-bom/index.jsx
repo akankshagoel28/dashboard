@@ -14,8 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tabs,
@@ -26,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
-function PendingBom({ items, bomItems, onItemSelect }) {
+function PendingBom({ items, bomItems }) {
   const [activeTab, setActiveTab] = useState("sell");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -39,26 +37,29 @@ function PendingBom({ items, bomItems, onItemSelect }) {
     .filter(
       (item) =>
         item.internal_item_name
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
         item.item_description
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchTerm.toLowerCase())
     );
 
-  // Get all purchase items that aren't used in any BOM
+  // Get all purchase items that aren't used in any BOM as components
   const unusedPurchaseItems = items
     .filter((item) => item.type === "purchase")
-    .filter(
-      (item) => !bomItems.some((bom) => bom.component_id === item.id)
-    )
+    .filter((item) => {
+      const isUsedAsComponent = bomItems.some(
+        (bom) => parseInt(bom.component_id) === item.id
+      );
+      return !isUsedAsComponent;
+    })
     .filter(
       (item) =>
         item.internal_item_name
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
         item.item_description
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchTerm.toLowerCase())
     );
 
@@ -84,7 +85,7 @@ function PendingBom({ items, bomItems, onItemSelect }) {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 pb-24 md:pb-2">
-            <TabsTrigger value="sell" className="text-wrap ">
+            <TabsTrigger value="sell" className="text-wrap">
               Sell Items Without BOM
               {sellItemsWithoutBom.length > 0 && (
                 <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
@@ -92,7 +93,7 @@ function PendingBom({ items, bomItems, onItemSelect }) {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="purchase" className="text-wrap ">
+            <TabsTrigger value="purchase" className="text-wrap">
               Unused Purchase Items
               {unusedPurchaseItems.length > 0 && (
                 <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">

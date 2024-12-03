@@ -93,13 +93,33 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
         return;
       }
 
+      // Validate required fields before initializing data
+      const validationErrors = [];
+      fileData.forEach((row, index) => {
+        if (!row.internal_item_name) {
+          validationErrors.push(
+            `Row ${index + 1}: Internal item name is required`
+          );
+        }
+        if (!row.tenant_id) {
+          validationErrors.push(
+            `Row ${index + 1}: Tenant ID is required`
+          );
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+
       const initializedData = fileData
         .filter((row) =>
           Object.values(row).some((value) => value !== "")
         )
         .map((row) => ({
-          internal_item_name: row.internal_item_name || "",
-          tenant_id: row.tenant_id || "",
+          internal_item_name: row.internal_item_name,
+          tenant_id: row.tenant_id,
           item_description: row.item_description || "",
           uom: row.uom || "",
           type: row.type || "",
@@ -110,7 +130,6 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
             row.additional_attributes__drawing_revision_number || "0",
           drawing_revision_date:
             row.additional_attributes__drawing_revision_date || "",
-          // Handle different possible types of avg_weight_needed value
           avg_weight_needed: (() => {
             const value =
               row.additional_attributes__avg_weight_needed;
@@ -217,9 +236,20 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
     data.forEach((row, index) => {
       const rowNum = index + 1;
 
-      // Validate required fields
-      if (!row.internal_item_name?.trim()) {
+      // Validate required fields without trim()
+      if (!row.internal_item_name) {
         errors.push(`Row ${rowNum}: Internal item name is required`);
+      }
+
+      if (!row.tenant_id) {
+        errors.push(`Row ${rowNum}: Tenant ID is required`);
+      }
+
+      // Additional validation for tenant_id format
+      if (isNaN(parseInt(row.tenant_id))) {
+        errors.push(
+          `Row ${rowNum}: Tenant ID must be a valid number`
+        );
       }
 
       // Check for duplicate internal_item_name + tenant combination
@@ -234,9 +264,15 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
         );
       }
 
-      // Validate tenant_id
-      if (!row.tenant_id?.trim()) {
-        errors.push(`Row ${rowNum}: Tenant ID is required`);
+      // Rest of your existing validations
+      if (!row.type?.trim()) {
+        errors.push(`Row ${rowNum}: Type is required`);
+      } else if (
+        !["sell", "purchase", "component"].includes(row.type)
+      ) {
+        errors.push(
+          `Row ${rowNum}: Invalid type. Must be 'sell', 'purchase', or 'component'`
+        );
       }
 
       // Validate type

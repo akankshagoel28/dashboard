@@ -35,7 +35,7 @@ function PendingItems({ items, onResolve }) {
       item.max_buffer &&
       item.min_buffer &&
       item.customer_item_name &&
-      (!["sell", "purchase"].includes(item.type) ||
+      (!["sell", "purchase", "component"].includes(item.type) ||
         item.additional_attributes?.scrap_type)
     );
   });
