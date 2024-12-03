@@ -60,46 +60,14 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
     "max_buffer",
     "min_buffer",
     "customer_item_name",
-    "drawing_revision_number",
-    "drawing_revision_date",
-    "avg_weight_needed",
-    "scrap_type",
-    "shelf_floor_alternate_name",
+    "additional_attributes__drawing_revision_number",
+    "additional_attributes__drawing_revision_date",
+    "additional_attributes__avg_weight_needed",
+    "additional_attributes__scrap_type",
+    "additional_attributes__shelf_floor_alternate_name",
     "created_by",
     "last_updated_by",
   ];
-
-  const downloadTemplate = () => {
-    const csv = Papa.unparse([templateFields]);
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "items_template.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const parseExcelFile = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
-          resolve(jsonData);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = (error) => reject(error);
-      reader.readAsArrayBuffer(file);
-    });
-  };
 
   const handleFileSelect = async (event) => {
     const selectedFile = event.target.files[0];
@@ -142,10 +110,16 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
             row.additional_attributes__drawing_revision_number || "0",
           drawing_revision_date:
             row.additional_attributes__drawing_revision_date || "",
-          avg_weight_needed:
-            (
-              row.additional_attributes__avg_weight_needed || "false"
-            ).toLowerCase() === "true",
+          // Handle different possible types of avg_weight_needed value
+          avg_weight_needed: (() => {
+            const value =
+              row.additional_attributes__avg_weight_needed;
+            if (typeof value === "boolean") return value;
+            if (typeof value === "number") return Boolean(value);
+            if (typeof value === "string")
+              return value.toLowerCase() === "true";
+            return false;
+          })(),
           scrap_type: row.additional_attributes__scrap_type || "",
           shelf_floor_alternate_name:
             row.additional_attributes__shelf_floor_alternate_name ||
@@ -156,8 +130,85 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
 
       setCsvData(initializedData);
     } catch (error) {
+      console.error("Error details:", error);
       setErrors([error.message]);
     }
+  };
+
+  const handleUpload = async () => {
+    const validationErrors = validateData(csvData);
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const preparedData = csvData.map((row) => ({
+        internal_item_name: row.internal_item_name,
+        tenant_id: parseInt(row.tenant_id),
+        item_description: row.item_description || "",
+        uom: row.uom,
+        type: row.type,
+        max_buffer: parseInt(row.max_buffer || "0"),
+        min_buffer: parseInt(row.min_buffer || "0"),
+        customer_item_name: row.customer_item_name || "",
+        is_deleted: false,
+        additional_attributes: {
+          drawing_revision_number: parseInt(
+            row.drawing_revision_number || "0"
+          ),
+          drawing_revision_date: row.drawing_revision_date || "",
+          avg_weight_needed: row.avg_weight_needed,
+          scrap_type: row.scrap_type || "",
+          shelf_floor_alternate_name:
+            row.shelf_floor_alternate_name || "",
+        },
+        created_by: row.created_by || "user1",
+        last_updated_by: row.last_updated_by || "user1",
+      }));
+
+      await onUpload(preparedData);
+      setFile(null);
+      setCsvData([]);
+      setErrors([]);
+    } catch (error) {
+      setErrors([Array.isArray(error) ? error : [error.message]]);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const downloadTemplate = () => {
+    const csv = Papa.unparse([templateFields]);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "items_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const parseExcelFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          resolve(jsonData);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsArrayBuffer(file);
+    });
   };
 
   const validateData = (data) => {
@@ -250,53 +301,6 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
     };
     setCsvData(updatedData);
     setErrors(validateData(updatedData));
-  };
-
-  const handleUpload = async () => {
-    const validationErrors = validateData(csvData);
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const preparedData = csvData.map((row) => ({
-        internal_item_name: row.internal_item_name,
-        tenant_id: parseInt(row.tenant_id),
-        item_description: row.item_description || "",
-        uom: row.uom,
-        type: row.type,
-        max_buffer: parseInt(row.max_buffer || "0"),
-        min_buffer: parseInt(row.min_buffer || "0"),
-        customer_item_name: row.customer_item_name || "",
-        is_deleted: false,
-        additional_attributes: {
-          drawing_revision_number: parseInt(
-            row.additional_attributes__drawing_revision_number || "0"
-          ),
-          drawing_revision_date:
-            row.additional_attributes__drawing_revision_date || "",
-          avg_weight_needed:
-            row.additional_attributes__avg_weight_needed,
-          scrap_type: row.additional_attributes__scrap_type || "",
-          shelf_floor_alternate_name:
-            row.additional_attributes__shelf_floor_alternate_name ||
-            "",
-        },
-        created_by: row.created_by || "user1",
-        last_updated_by: row.last_updated_by || "user1",
-      }));
-
-      await onUpload(preparedData);
-      setFile(null);
-      setCsvData([]);
-      setErrors([]);
-    } catch (error) {
-      setErrors([error.message]);
-    } finally {
-      setUploading(false);
-    }
   };
 
   return (
