@@ -217,20 +217,9 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
     data.forEach((row, index) => {
       const rowNum = index + 1;
 
-      // Validate tenant_id
-      if (!row.tenant_id) {
-        errors.push(`Row ${rowNum}: Tenant ID is required`);
-      } else {
-        const tenantId = parseInt(row.tenant_id);
-        if (isNaN(tenantId)) {
-          errors.push(
-            `Row ${rowNum}: Tenant ID must be a valid number`
-          );
-        } else if (tenantId <= 0) {
-          errors.push(
-            `Row ${rowNum}: Tenant ID must be greater than zero`
-          );
-        }
+      // Validate required fields
+      if (!row.internal_item_name?.trim()) {
+        errors.push(`Row ${rowNum}: Internal item name is required`);
       }
 
       // Check for duplicate internal_item_name + tenant combination
@@ -246,8 +235,19 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
       }
 
       // Validate tenant_id
-      if (!row.tenant_id?.trim()) {
+      if (!row.tenant_id) {
         errors.push(`Row ${rowNum}: Tenant ID is required`);
+      } else {
+        const tenantId = parseInt(row.tenant_id);
+        if (isNaN(tenantId)) {
+          errors.push(
+            `Row ${rowNum}: Tenant ID must be a valid number`
+          );
+        } else if (tenantId <= 0) {
+          errors.push(
+            `Row ${rowNum}: Tenant ID must be greater than zero`
+          );
+        }
       }
 
       // Validate type
