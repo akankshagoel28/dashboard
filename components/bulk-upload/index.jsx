@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 
 function BulkUpload({ onUpload, items, existingBomItems }) {
   const [file, setFile] = useState(null);
@@ -48,46 +49,89 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
   const sellItems = items.filter((item) => item.type === "sell");
 
   const downloadTemplate = () => {
-    const csv = Papa.unparse([templateFields]);
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "template.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([templateFields]);
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+
+    // Save as xlsx
+    XLSX.writeFile(wb, "template.xlsx");
   };
 
-  const handleFileSelect = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setErrors([]);
+  const parseExcelFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+            header: templateFields,
+          });
+          resolve(jsonData);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsArrayBuffer(file);
+    });
+  };
 
-      Papa.parse(selectedFile, {
-        header: true,
-        complete: (results) => {
-          const initializedData = results.data
-            .filter((row) =>
-              Object.values(row).some((value) => value !== "")
-            )
-            .map((row) => ({
-              item_id: row.item_id || "",
-              component_id: row.component_id || "",
-              quantity: row.quantity || "1",
-              created_by: row.created_by || "user1",
-              last_updated_by: row.last_updated_by || "user1",
-            }));
-          setCsvData(initializedData);
-        },
-        error: (error) => {
-          setErrors([error.message]);
-        },
-      });
+  const handleFileSelect = async (event) => {
+    const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+    setErrors([]);
+
+    try {
+      if (selectedFile.name.endsWith(".xlsx")) {
+        const excelData = await parseExcelFile(selectedFile);
+        const initializedData = excelData
+          .filter((row) =>
+            Object.values(row).some((value) => value !== "")
+          )
+          .map((row) => ({
+            item_id: row.item_id?.toString() || "",
+            component_id: row.component_id?.toString() || "",
+            quantity: row.quantity?.toString() || "1",
+            created_by: row.created_by || "user1",
+            last_updated_by: row.last_updated_by || "user1",
+          }));
+        setCsvData(initializedData);
+      } else if (selectedFile.name.endsWith(".csv")) {
+        Papa.parse(selectedFile, {
+          header: true,
+          complete: (results) => {
+            const initializedData = results.data
+              .filter((row) =>
+                Object.values(row).some((value) => value !== "")
+              )
+              .map((row) => ({
+                item_id: row.item_id || "",
+                component_id: row.component_id || "",
+                quantity: row.quantity || "1",
+                created_by: row.created_by || "user1",
+                last_updated_by: row.last_updated_by || "user1",
+              }));
+            setCsvData(initializedData);
+          },
+          error: (error) => {
+            setErrors([error.message]);
+          },
+        });
+      } else {
+        setErrors(["Please upload a .csv or .xlsx file"]);
+      }
+    } catch (error) {
+      setErrors([error.message]);
     }
   };
 
+  // Rest of the component remains the same...
   const isComponentAlreadyInBom = (itemId, componentId) => {
     if (!itemId || !componentId) return false;
 
@@ -130,7 +174,6 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
       } else {
         const combination = `${row.item_id}-${row.component_id}`;
 
-        // Check if component is already in ANY BOM for this item
         if (isComponentAlreadyInBom(row.item_id, row.component_id)) {
           const itemName = sellItems.find(
             (item) => item.id.toString() === row.item_id?.toString()
@@ -144,7 +187,6 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
           );
         }
 
-        // Check for duplicates within the current CSV upload
         if (combinationsInCsv.has(combination)) {
           errors.push(
             `Row ${rowNum}: This item-component combination appears multiple times in the upload`
@@ -253,7 +295,7 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
             <div className="flex-1">
               <Input
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx"
                 onChange={handleFileSelect}
                 className="cursor-pointer"
               />

@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 
 const ITEM_TYPES = [
   { value: "sell", label: "Sell" },
@@ -80,46 +81,78 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
     document.body.removeChild(link);
   };
 
-  const handleFileSelect = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setErrors([]);
+  const parseExcelFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          resolve(jsonData);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsArrayBuffer(file);
+    });
+  };
 
-      Papa.parse(selectedFile, {
-        header: true,
-        complete: (results) => {
-          const initializedData = results.data
-            .filter((row) =>
-              Object.values(row).some((value) => value !== "")
-            )
-            .map((row) => ({
-              internal_item_name: row.internal_item_name || "",
-              tenant_id: row.tenant_id || "",
-              item_description: row.item_description || "",
-              uom: row.uom || "",
-              type: row.type || "",
-              max_buffer: row.max_buffer || "0",
-              min_buffer: row.min_buffer || "0",
-              customer_item_name: row.customer_item_name || "",
-              drawing_revision_number:
-                row.drawing_revision_number || "0",
-              drawing_revision_date: row.drawing_revision_date || "",
-              avg_weight_needed:
-                (row.avg_weight_needed || "false").toLowerCase() ===
-                "true",
-              scrap_type: row.scrap_type || "",
-              shelf_floor_alternate_name:
-                row.shelf_floor_alternate_name || "",
-              created_by: row.created_by || "user1",
-              last_updated_by: row.last_updated_by || "user1",
-            }));
-          setCsvData(initializedData);
-        },
-        error: (error) => {
-          setErrors([error.message]);
-        },
-      });
+  const handleFileSelect = async (event) => {
+    const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+    setErrors([]);
+
+    try {
+      let fileData;
+      if (selectedFile.name.endsWith(".xlsx")) {
+        fileData = await parseExcelFile(selectedFile);
+      } else if (selectedFile.name.endsWith(".csv")) {
+        fileData = await new Promise((resolve, reject) => {
+          Papa.parse(selectedFile, {
+            header: true,
+            complete: (results) => resolve(results.data),
+            error: reject,
+          });
+        });
+      } else {
+        setErrors(["Please upload a .csv or .xlsx file"]);
+        return;
+      }
+
+      const initializedData = fileData
+        .filter((row) =>
+          Object.values(row).some((value) => value !== "")
+        )
+        .map((row) => ({
+          internal_item_name: row.internal_item_name || "",
+          tenant_id: row.tenant_id || "",
+          item_description: row.item_description || "",
+          uom: row.uom || "",
+          type: row.type || "",
+          max_buffer: row.max_buffer || "0",
+          min_buffer: row.min_buffer || "0",
+          customer_item_name: row.customer_item_name || "",
+          drawing_revision_number: row.drawing_revision_number || "0",
+          drawing_revision_date: row.drawing_revision_date || "",
+          avg_weight_needed:
+            (row.avg_weight_needed || "false").toLowerCase() ===
+            "true",
+          scrap_type: row.scrap_type || "",
+          shelf_floor_alternate_name:
+            row.shelf_floor_alternate_name || "",
+          created_by: row.created_by || "user1",
+          last_updated_by: row.last_updated_by || "user1",
+        }));
+
+      setCsvData(initializedData);
+    } catch (error) {
+      setErrors([error.message]);
     }
   };
 
@@ -294,7 +327,7 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
             <div className="flex-1">
               <Input
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx"
                 onChange={handleFileSelect}
                 className="cursor-pointer"
               />
