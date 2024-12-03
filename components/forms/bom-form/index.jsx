@@ -199,8 +199,8 @@ function BomForm({
           <div className="p-6">
             <ItemForm
               onSubmit={onNewSubmit}
-              defaultType="component" // Changed this to default to component type
-              disableTypeChange={false} // Allow type selection between purchase and component
+              defaultType="component"
+              disableTypeChange={false}
             />
           </div>
         </ScrollArea>

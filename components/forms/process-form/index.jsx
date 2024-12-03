@@ -64,7 +64,6 @@ function ProcessForm({ onSubmit, initialData }) {
           value: id.toString(),
           label: `Tenant ${id}`,
         }));
-      console.log("Formatted Tenant Options:", formattedTenants); // Debug log for final options
 
       setTenantOptions(formattedTenants);
     }

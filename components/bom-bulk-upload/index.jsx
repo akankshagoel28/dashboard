@@ -29,7 +29,7 @@ import {
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 
-function BulkUpload({ onUpload, items, existingBomItems }) {
+function BomBulkUpload({ onUpload, items, existingBomItems }) {
   const [file, setFile] = useState(null);
   const [csvData, setCsvData] = useState([]);
   const [errors, setErrors] = useState([]);
@@ -49,12 +49,9 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
   const sellItems = items.filter((item) => item.type === "sell");
 
   const downloadTemplate = () => {
-    // Create workbook
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([templateFields]);
     XLSX.utils.book_append_sheet(wb, ws, "Template");
-
-    // Save as xlsx
     XLSX.writeFile(wb, "template.xlsx");
   };
 
@@ -456,4 +453,4 @@ function BulkUpload({ onUpload, items, existingBomItems }) {
   );
 }
 
-export default BulkUpload;
+export default BomBulkUpload;

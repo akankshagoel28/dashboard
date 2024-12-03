@@ -101,7 +101,7 @@ function ItemsMaster() {
         });
       }
 
-      fetchItems(); // Refresh the items list
+      fetchItems(); // Refreshing the items list
     } catch (error) {
       toast({
         variant: "destructive",
@@ -124,8 +124,6 @@ function ItemsMaster() {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Items Master</h2>
         <div className="flex gap-4">
-          {" "}
-          {/* Added wrapper div for buttons */}
           <ItemsBulkUpload
             onUpload={handleBulkUpload}
             existingItems={items}
@@ -159,7 +157,7 @@ function ItemsMaster() {
                   <ItemForm
                     onSubmit={handleSubmit}
                     editData={editData}
-                    existingItems={items} // Pass your items array here
+                    existingItems={items}
                   />
                 </div>
               </div>

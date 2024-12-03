@@ -110,7 +110,7 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
             row.additional_attributes__drawing_revision_number || "0",
           drawing_revision_date:
             row.additional_attributes__drawing_revision_date || "",
-          // Handle different possible types of avg_weight_needed value
+          // Handling different possible types of avg_weight_needed value
           avg_weight_needed: (() => {
             const value =
               row.additional_attributes__avg_weight_needed;

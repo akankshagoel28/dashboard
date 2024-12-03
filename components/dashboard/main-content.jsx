@@ -1,4 +1,3 @@
-// components/dashboard/main-content.jsx
 import React from "react";
 import {
   Tabs,

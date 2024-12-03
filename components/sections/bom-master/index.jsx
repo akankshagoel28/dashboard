@@ -25,7 +25,7 @@ import BomTable from "@/components/tables/bom-table";
 import { useBom } from "@/hooks/use-bom";
 import { useItems } from "@/hooks/use-items";
 import { useToast } from "@/hooks/use-toast";
-import BulkUpload from "@/components/bulk-upload";
+import BomBulkUpload from "@/components/bom-bulk-upload";
 import BomForm from "@/components/forms/bom-form";
 import PendingBom from "@/components/sections/pending-bom";
 
@@ -239,7 +239,6 @@ function BomMaster() {
         });
       }
 
-      // Only fetch if we have a selected item
       if (selectedItemId) {
         fetchBomByItemId(selectedItemId);
       }
@@ -357,7 +356,7 @@ function BomMaster() {
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Component
             </Button>
-            <BulkUpload
+            <BomBulkUpload
               onUpload={handleBulkUpload}
               items={items}
               existingBomItems={allBoms}

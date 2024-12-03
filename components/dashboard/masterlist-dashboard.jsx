@@ -8,8 +8,6 @@ function MasterlistDashboard() {
   const [completionStatus, setCompletionStatus] = useState({
     items: 0,
     bom: 0,
-    processes: 0,
-    processSteps: 0,
   });
 
   const [activeSection, setActiveSection] = useState("items");
@@ -30,7 +28,7 @@ function MasterlistDashboard() {
   return (
     <div className="container mx-auto p-4 min-h-screen bg-gray-50">
       <div className="flex justify-end mb-4"></div>
-      <ProgressTracker completionStatus={completionStatus} />
+      <ProgressTracker />
 
       <div className="md:grid-cols-12 md:gap-6 md:grid">
         <div className="md:col-span-3 md:block hidden">
