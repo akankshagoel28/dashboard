@@ -1,4 +1,3 @@
-// components/tables/bom-table/index.jsx
 import React, { useState } from "react";
 import {
   Table,
@@ -32,9 +31,17 @@ function BomTable({ bomItems, items, onQuantityChange, onDelete }) {
     setEditingQuantity(bom.quantity.toString());
   };
 
+  const handleQuantityChange = (value) => {
+    // Only allow numbers between 1 and 100
+    const numValue = Math.min(Math.max(1, Number(value)), 100);
+    if (!isNaN(numValue)) {
+      setEditingQuantity(numValue.toString());
+    }
+  };
+
   const handleSave = (bom) => {
     const quantity = parseFloat(editingQuantity);
-    if (!isNaN(quantity) && quantity > 0) {
+    if (!isNaN(quantity) && quantity >= 1 && quantity <= 100) {
       onQuantityChange(bom, quantity);
     }
     setEditingId(null);
@@ -85,11 +92,17 @@ function BomTable({ bomItems, items, onQuantityChange, onDelete }) {
                           type="number"
                           value={editingQuantity}
                           onChange={(e) =>
-                            setEditingQuantity(e.target.value)
+                            handleQuantityChange(e.target.value)
                           }
+                          onBlur={(e) => {
+                            const value = Number(e.target.value);
+                            if (value < 1) handleQuantityChange("1");
+                            if (value > 100)
+                              handleQuantityChange("100");
+                          }}
                           className="w-24"
-                          min="0.01"
-                          step="0.01"
+                          min="1"
+                          max="100"
                         />
                         <Button
                           size="sm"

@@ -23,6 +23,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 function ItemsTable({ items, onEdit, onDelete }) {
+  // Sort items by ID
+  const sortedItems = [...items].sort((a, b) => {
+    // Convert IDs to numbers for proper numerical sorting
+    const idA = Number(a.id);
+    const idB = Number(b.id);
+    return idA - idB;
+  });
+
   const getStatus = (item) => {
     const isComplete = Boolean(
       item.internal_item_name &&
@@ -49,6 +57,7 @@ function ItemsTable({ items, onEdit, onDelete }) {
       </Badge>
     );
   };
+
   const getTypeBadge = (type) => {
     return (
       <Badge variant={type === "sell" ? "default" : "secondary"}>
@@ -70,7 +79,7 @@ function ItemsTable({ items, onEdit, onDelete }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <TableRow
             key={`${item.tenant_id}-${item.internal_item_name}`}
           >
