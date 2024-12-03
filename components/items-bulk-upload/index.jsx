@@ -93,33 +93,13 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
         return;
       }
 
-      // Validate required fields before initializing data
-      const validationErrors = [];
-      fileData.forEach((row, index) => {
-        if (!row.internal_item_name) {
-          validationErrors.push(
-            `Row ${index + 1}: Internal item name is required`
-          );
-        }
-        if (!row.tenant_id) {
-          validationErrors.push(
-            `Row ${index + 1}: Tenant ID is required`
-          );
-        }
-      });
-
-      if (validationErrors.length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
-
       const initializedData = fileData
         .filter((row) =>
           Object.values(row).some((value) => value !== "")
         )
         .map((row) => ({
-          internal_item_name: row.internal_item_name,
-          tenant_id: row.tenant_id,
+          internal_item_name: row.internal_item_name || "",
+          tenant_id: row.tenant_id || "",
           item_description: row.item_description || "",
           uom: row.uom || "",
           type: row.type || "",
@@ -130,6 +110,7 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
             row.additional_attributes__drawing_revision_number || "0",
           drawing_revision_date:
             row.additional_attributes__drawing_revision_date || "",
+          // Handle different possible types of avg_weight_needed value
           avg_weight_needed: (() => {
             const value =
               row.additional_attributes__avg_weight_needed;
@@ -236,20 +217,20 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
     data.forEach((row, index) => {
       const rowNum = index + 1;
 
-      // Validate required fields without trim()
-      if (!row.internal_item_name) {
-        errors.push(`Row ${rowNum}: Internal item name is required`);
-      }
-
+      // Validate tenant_id
       if (!row.tenant_id) {
         errors.push(`Row ${rowNum}: Tenant ID is required`);
-      }
-
-      // Additional validation for tenant_id format
-      if (isNaN(parseInt(row.tenant_id))) {
-        errors.push(
-          `Row ${rowNum}: Tenant ID must be a valid number`
-        );
+      } else {
+        const tenantId = parseInt(row.tenant_id);
+        if (isNaN(tenantId)) {
+          errors.push(
+            `Row ${rowNum}: Tenant ID must be a valid number`
+          );
+        } else if (tenantId <= 0) {
+          errors.push(
+            `Row ${rowNum}: Tenant ID must be greater than zero`
+          );
+        }
       }
 
       // Check for duplicate internal_item_name + tenant combination
@@ -264,15 +245,9 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
         );
       }
 
-      // Rest of your existing validations
-      if (!row.type?.trim()) {
-        errors.push(`Row ${rowNum}: Type is required`);
-      } else if (
-        !["sell", "purchase", "component"].includes(row.type)
-      ) {
-        errors.push(
-          `Row ${rowNum}: Invalid type. Must be 'sell', 'purchase', or 'component'`
-        );
+      // Validate tenant_id
+      if (!row.tenant_id?.trim()) {
+        errors.push(`Row ${rowNum}: Tenant ID is required`);
       }
 
       // Validate type
@@ -294,7 +269,7 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
       }
 
       // Validate min_buffer for sell and purchase items
-      if (["sell", "purchase"].includes(row.type)) {
+      if (["sell", "purchase", "component"].includes(row.type)) {
         if (!row.min_buffer && row.min_buffer !== "0") {
           errors.push(
             `Row ${rowNum}: Min buffer is required for sell and purchase items`
@@ -416,7 +391,7 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
                         <TableCell>
                           <Input
                             type="number"
-                            min="1"
+                            min="1" // Set minimum value to 1
                             value={row.tenant_id}
                             onChange={(e) =>
                               handleCellChange(
@@ -428,6 +403,7 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
                             className="w-20"
                           />
                         </TableCell>
+
                         <TableCell>
                           <Select
                             value={row.type}
