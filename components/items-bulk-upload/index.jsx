@@ -213,16 +213,24 @@ function ItemsBulkUpload({ onUpload, existingItems }) {
 
   const validateData = (data) => {
     const errors = [];
+    // Track unique combinations to check for duplicates within the CSV
+    const seenCombinations = new Set();
 
     data.forEach((row, index) => {
       const rowNum = index + 1;
 
-      // Validate required fields
-      if (!row.internal_item_name?.trim()) {
-        errors.push(`Row ${rowNum}: Internal item name is required`);
-      }
+      // Create a unique key for item+tenant combination
+      const itemKey = `${row.internal_item_name}-${row.tenant_id}`;
 
-      // Check for duplicate internal_item_name + tenant combination
+      // Check for duplicates within the CSV data
+      if (seenCombinations.has(itemKey)) {
+        errors.push(
+          `Row ${rowNum}: Duplicate entry - Item "${row.internal_item_name}" for tenant ${row.tenant_id} appears multiple times in the upload file`
+        );
+      }
+      seenCombinations.add(itemKey);
+
+      // Existing validation for duplicates against database
       const isDuplicate = existingItems?.some(
         (item) =>
           item.internal_item_name === row.internal_item_name &&
