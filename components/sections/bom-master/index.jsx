@@ -56,9 +56,6 @@ function BomMaster() {
     initializeData();
   }, [fetchItems, fetchAllBoms]);
 
-  const purchaseItems = items.filter(
-    (item) => item.type === "purchase"
-  );
   const sellItems = items.filter((item) => item.type === "sell");
 
   const getItemName = (id) => {
