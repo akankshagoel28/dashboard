@@ -197,11 +197,7 @@ function BomForm({
       <TabsContent value="new" className="flex-1">
         <ScrollArea className="h-[calc(100vh-300px)]">
           <div className="p-6">
-            <ItemForm
-              onSubmit={onNewSubmit}
-              defaultType="component"
-              disableTypeChange={false}
-            />
+            <ItemForm onSubmit={onNewSubmit} />
           </div>
         </ScrollArea>
       </TabsContent>
