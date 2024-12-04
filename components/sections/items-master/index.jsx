@@ -166,7 +166,6 @@ function ItemsMaster() {
                 onClick={() => setOpen(false)}
               >
                 <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
               </button>
             </DialogContent>
           </Dialog>

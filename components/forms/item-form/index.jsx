@@ -65,22 +65,7 @@ function ItemForm({ onSubmit, editData, existingItems }) {
   });
 
   const selectedType = form.watch("type") || "";
-  const maxBuffer = form.watch("max_buffer") || "0";
   const minBuffer = form.watch("min_buffer") || "0";
-
-  useEffect(() => {
-    const maxVal = parseInt(maxBuffer || "0");
-    const minVal = parseInt(minBuffer || "0");
-    if (maxVal < minVal) {
-      form.setError("max_buffer", {
-        type: "validation",
-        message:
-          "Max buffer must be greater than or equal to min buffer",
-      });
-    } else {
-      form.clearErrors("max_buffer");
-    }
-  }, [maxBuffer, minBuffer, form]);
 
   const handleSubmit = async (data) => {
     form.clearErrors();
@@ -96,27 +81,6 @@ function ItemForm({ onSubmit, editData, existingItems }) {
     if (isDuplicate) {
       errors.push(
         "This internal item name already exists for this tenant"
-      );
-    }
-
-    if (selectedType === "sell" && !data.scrap_type?.trim()) {
-      errors.push("Scrap type is required for sell items");
-    }
-
-    if (["sell", "purchase"].includes(selectedType)) {
-      if (!data.min_buffer && data.min_buffer !== "0") {
-        errors.push(
-          "Min buffer is required for sell and purchase items"
-        );
-      }
-    }
-
-    const maxBufferNum = parseInt(data.max_buffer || "0");
-    const minBufferNum = parseInt(data.min_buffer || "0");
-
-    if (maxBufferNum < minBufferNum) {
-      errors.push(
-        "Max buffer must be greater than or equal to min buffer"
       );
     }
 
@@ -263,7 +227,7 @@ function ItemForm({ onSubmit, editData, existingItems }) {
           )}
         />
 
-        {["sell", "purchase"].includes(selectedType) && (
+        {["sell", "purchase", "component"].includes(selectedType) && (
           <FormField
             control={form.control}
             name="scrap_type"
@@ -325,10 +289,14 @@ function ItemForm({ onSubmit, editData, existingItems }) {
             rules={{
               validate: {
                 required: (value) => {
-                  if (["sell", "purchase"].includes(selectedType)) {
+                  if (
+                    ["sell", "purchase", "component"].includes(
+                      selectedType
+                    )
+                  ) {
                     return (
                       (value !== undefined && value !== "") ||
-                      "Min buffer is required for sell and purchase items"
+                      "Min buffer is required for all items"
                     );
                   }
                   return true;
@@ -339,7 +307,9 @@ function ItemForm({ onSubmit, editData, existingItems }) {
               <FormItem>
                 <FormLabel>
                   Min Buffer{" "}
-                  {["sell", "purchase"].includes(selectedType)
+                  {["sell", "purchase", "component"].includes(
+                    selectedType
+                  )
                     ? "*"
                     : ""}
                 </FormLabel>

@@ -25,7 +25,6 @@ import {
 function ItemsTable({ items, onEdit, onDelete }) {
   // Sort items by ID
   const sortedItems = [...items].sort((a, b) => {
-    // Convert IDs to numbers for proper numerical sorting
     const idA = Number(a.id);
     const idB = Number(b.id);
     return idA - idB;
@@ -42,7 +41,7 @@ function ItemsTable({ items, onEdit, onDelete }) {
         item.min_buffer &&
         item.customer_item_name &&
         item.additional_attributes?.avg_weight_needed &&
-        (!["sell", "purchase"].includes(item.type) ||
+        (!["sell", "purchase", "component"].includes(item.type) ||
           item.additional_attributes?.scrap_type)
     );
 
